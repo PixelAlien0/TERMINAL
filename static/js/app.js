@@ -93,6 +93,14 @@ const DOM = {
   clearCartBtn: document.getElementById('clearCartBtn'),
   btnHoldOrder: document.getElementById('btnHoldOrder'),
   btnProceedPayment: document.getElementById('btnProceedPayment'),
+  ticketPane: document.getElementById('posTicketPane'),
+  mobileCartTrigger: document.getElementById('mobileCartTrigger'),
+  mobileCartBadge: document.getElementById('mobileCartBadge'),
+  mobileOrderFloatingBar: document.getElementById('mobileOrderFloatingBar'),
+  mobileBarQty: document.getElementById('mobileBarQty'),
+  mobileBarTotal: document.getElementById('mobileBarTotal'),
+  btnMobileOpenCart: document.getElementById('btnMobileOpenCart'),
+  btnMobileCloseCart: document.getElementById('btnMobileCloseCart'),
 
   // Item Modifiers Modal
   modifierModal: document.getElementById('modifierModal'),
@@ -884,6 +892,11 @@ function renderCart() {
     DOM.btnHoldOrder.disabled = true;
     DOM.cartCountBadge.textContent = '0 items';
     DOM.cartItemCountSummary.textContent = '0 items';
+    if (DOM.mobileCartBadge) DOM.mobileCartBadge.textContent = '0';
+    if (DOM.mobileBarBadge) DOM.mobileBarBadge.textContent = '0';
+    if (DOM.mobileBarQty) DOM.mobileBarQty.textContent = '0 items';
+    if (DOM.mobileBarTotal) DOM.mobileBarTotal.textContent = formatMoney(0);
+    if (DOM.mobileOrderFloatingBar) DOM.mobileOrderFloatingBar.classList.remove('active');
     updateFinancialDisplay(0.0);
     container.querySelectorAll('.cart-item-row').forEach(r => r.remove());
     return;
@@ -896,6 +909,12 @@ function renderCart() {
   const totalItemCount = items.reduce((acc, curr) => acc + curr.qty, 0);
   DOM.cartCountBadge.textContent = `${totalItemCount} item${totalItemCount === 1 ? '' : 's'}`;
   DOM.cartItemCountSummary.textContent = `${totalItemCount} item${totalItemCount === 1 ? '' : 's'}`;
+  if (DOM.mobileCartBadge) DOM.mobileCartBadge.textContent = totalItemCount;
+  if (DOM.mobileBarBadge) DOM.mobileBarBadge.textContent = totalItemCount;
+  if (DOM.mobileBarQty) DOM.mobileBarQty.textContent = `${totalItemCount} item${totalItemCount === 1 ? '' : 's'}`;
+  if (DOM.mobileOrderFloatingBar) {
+    DOM.mobileOrderFloatingBar.classList.add('active');
+  }
 
   container.querySelectorAll('.cart-item-row').forEach(r => r.remove());
 
@@ -968,6 +987,7 @@ function updateFinancialDisplay(subtotal) {
 
   DOM.subtotalAmount.textContent = formatMoney(subtotal);
   DOM.taxAmount.textContent = formatMoney(tax);
+  if (DOM.mobileBarTotal) DOM.mobileBarTotal.textContent = formatMoney(grandTotal);
 
   if (window.gsap) {
     const dummy = { val: prevTotal };
@@ -1434,6 +1454,7 @@ function exportCatalogToCsv() {
 // --- Checkout Modal Flow ---
 function openCheckoutModal() {
   if (AppState.cart.length === 0) return;
+  if (DOM.ticketPane) DOM.ticketPane.classList.remove('mobile-open');
 
   const due = AppState.activeTotal;
   DOM.checkoutDueDisplay.textContent = formatMoney(due);
@@ -2053,6 +2074,7 @@ async function renderAnalyticsTab() {
 // --- Modal Transitions (GSAP) ---
 function openModal(overlay, card) {
   overlay.classList.add('active');
+  document.body.classList.add('modal-open');
   if (window.gsap) {
     gsap.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.2 });
     gsap.fromTo(card, 
@@ -2063,18 +2085,24 @@ function openModal(overlay, card) {
 }
 
 function closeModal(overlay, card) {
+  const finalize = () => {
+    overlay.classList.remove('active');
+    const remainingOpen = document.querySelectorAll('.modal-overlay.active');
+    if (remainingOpen.length === 0) {
+      document.body.classList.remove('modal-open');
+    }
+  };
+
   if (window.gsap) {
     gsap.to(card, {
       scale: 0.96,
       opacity: 0,
       duration: 0.15,
       ease: 'power2.in',
-      onComplete: () => {
-        overlay.classList.remove('active');
-      }
+      onComplete: finalize
     });
   } else {
-    overlay.classList.remove('active');
+    finalize();
   }
 }
 
@@ -2232,6 +2260,9 @@ function setupEventListeners() {
     }
     if (e.key === 'Escape') {
       stopCameraScanner();
+      if (DOM.ticketPane && DOM.ticketPane.classList.contains('mobile-open')) {
+        DOM.ticketPane.classList.remove('mobile-open');
+      }
       closeModal(DOM.checkoutModal, DOM.checkoutModalCard);
       closeModal(DOM.receiptModal, DOM.receiptModalCard);
       closeModal(DOM.consoleModal, DOM.consoleModalCard);
@@ -2242,6 +2273,18 @@ function setupEventListeners() {
       closeModal(DOM.parkedOrdersModal, DOM.parkedOrdersModalCard);
     }
   });
+
+  // Mobile Cart Drawer Toggles
+  const openMobileCart = () => {
+    if (DOM.ticketPane) DOM.ticketPane.classList.add('mobile-open');
+  };
+  const closeMobileCart = () => {
+    if (DOM.ticketPane) DOM.ticketPane.classList.remove('mobile-open');
+  };
+
+  if (DOM.mobileCartTrigger) DOM.mobileCartTrigger.addEventListener('click', openMobileCart);
+  if (DOM.btnMobileOpenCart) DOM.btnMobileOpenCart.addEventListener('click', openMobileCart);
+  if (DOM.btnMobileCloseCart) DOM.btnMobileCloseCart.addEventListener('click', closeMobileCart);
 
   // Manual storage sync
   if (DOM.btnManualSync) {
@@ -2274,8 +2317,14 @@ function setupEventListeners() {
   }
 
   // Cart actions
-  DOM.clearCartBtn.addEventListener('click', clearCart);
-  DOM.btnHoldOrder.addEventListener('click', holdCurrentOrder);
+  DOM.clearCartBtn.addEventListener('click', () => {
+    clearCart();
+    closeMobileCart();
+  });
+  DOM.btnHoldOrder.addEventListener('click', () => {
+    holdCurrentOrder();
+    closeMobileCart();
+  });
   DOM.btnRecallOrder.addEventListener('click', openParkedOrdersModal);
   DOM.btnCloseParkedOrders.addEventListener('click', () => closeModal(DOM.parkedOrdersModal, DOM.parkedOrdersModalCard));
   DOM.btnProceedPayment.addEventListener('click', openCheckoutModal);
