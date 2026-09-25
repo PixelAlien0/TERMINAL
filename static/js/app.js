@@ -134,6 +134,22 @@ const DOM = {
   phoneUrlDisplay: document.getElementById('phoneUrlDisplay'),
   btnCopyPhoneUrl: document.getElementById('btnCopyPhoneUrl'),
 
+  // Scannable Barcode Elements & Label Modal
+  sampleBarcodeSvg: document.getElementById('sampleBarcodeSvg'),
+  interactiveBarcodeName: document.getElementById('interactiveBarcodeName'),
+  interactiveBarcodePrice: document.getElementById('interactiveBarcodePrice'),
+  barcodeLabelModal: document.getElementById('barcodeLabelModal'),
+  barcodeLabelModalCard: document.getElementById('barcodeLabelModalCard'),
+  btnCloseBarcodeLabel: document.getElementById('btnCloseBarcodeLabel'),
+  btnPrintBarcodeLabel: document.getElementById('btnPrintBarcodeLabel'),
+  btnAddBarcodeToCart: document.getElementById('btnAddBarcodeToCart'),
+  productLabelBarcodeSvg: document.getElementById('productLabelBarcodeSvg'),
+  labelProdName: document.getElementById('labelProdName'),
+  labelProdCategory: document.getElementById('labelProdCategory'),
+  labelProdSku: document.getElementById('labelProdSku'),
+  labelProdPrice: document.getElementById('labelProdPrice'),
+  receiptBarcodeSvg: document.getElementById('receiptBarcodeSvg'),
+
   // Delete Confirmation Modal
   deleteConfirmModal: document.getElementById('deleteConfirmModal'),
   deleteConfirmModalCard: document.getElementById('deleteConfirmModalCard'),
@@ -723,6 +739,15 @@ function renderProducts() {
       </div>
     `;
 
+    const barcodePill = card.querySelector('.product-barcode-pill');
+    if (barcodePill) {
+      barcodePill.title = 'Click to view/print scannable barcode label';
+      barcodePill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openBarcodeLabelModal(p);
+      });
+    }
+
     if (!isOutOfStock) {
       card.addEventListener('click', () => {
         animateCardClick(card);
@@ -1147,6 +1172,70 @@ function handleSaveModifiers() {
   closeModal(DOM.modifierModal, DOM.modifierModalCard);
   renderCart();
   showToast(`Updated customization for ${item.name}.`);
+}
+
+// --- Literal Scannable Barcode Subsystem (Code 128) ---
+let activeLabelProduct = null;
+
+function renderScannableBarcodePreview(code, name, price) {
+  if (!code) return;
+  const cleanCode = String(code).trim();
+
+  if (DOM.interactiveBarcodeName && name) {
+    DOM.interactiveBarcodeName.textContent = name;
+  }
+  if (DOM.interactiveBarcodePrice && price !== undefined) {
+    DOM.interactiveBarcodePrice.textContent = formatMoney(price);
+  }
+
+  if (DOM.sampleBarcodeSvg && typeof JsBarcode !== 'undefined') {
+    try {
+      JsBarcode(DOM.sampleBarcodeSvg, cleanCode, {
+        format: "CODE128",
+        width: 1.8,
+        height: 52,
+        displayValue: true,
+        font: "Martian Mono",
+        fontSize: 11,
+        textMargin: 3,
+        lineColor: "#0F172A",
+        background: "#FFFFFF"
+      });
+    } catch (err) {
+      console.warn('Barcode preview render error:', err);
+    }
+  }
+}
+
+function openBarcodeLabelModal(product) {
+  if (!product) return;
+  activeLabelProduct = product;
+
+  if (DOM.labelProdName) DOM.labelProdName.textContent = product.name;
+  if (DOM.labelProdCategory) DOM.labelProdCategory.textContent = product.category || 'General';
+  if (DOM.labelProdSku) DOM.labelProdSku.textContent = `SKU: ${product.barcode || product.id}`;
+  if (DOM.labelProdPrice) DOM.labelProdPrice.textContent = formatMoney(product.price);
+
+  const barcodeCode = String(product.barcode || product.id || '000000').trim();
+  if (DOM.productLabelBarcodeSvg && typeof JsBarcode !== 'undefined') {
+    try {
+      JsBarcode(DOM.productLabelBarcodeSvg, barcodeCode, {
+        format: "CODE128",
+        width: 2,
+        height: 64,
+        displayValue: true,
+        font: "Martian Mono",
+        fontSize: 12,
+        textMargin: 4,
+        lineColor: "#0F172A",
+        background: "#FFFFFF"
+      });
+    } catch (err) {
+      console.warn('Product label barcode error:', err);
+    }
+  }
+
+  openModal(DOM.barcodeLabelModal, DOM.barcodeLabelModalCard);
 }
 
 // --- Barcode Wedge Scanner Listener ---
@@ -1620,6 +1709,25 @@ function openReceiptModal(tx) {
     }
   }
 
+  const barcodeEl = document.getElementById('receiptBarcodeSvg');
+  if (barcodeEl && typeof JsBarcode !== 'undefined') {
+    try {
+      JsBarcode(barcodeEl, String(tx.id || 'TX-000000'), {
+        format: "CODE128",
+        width: 1.5,
+        height: 38,
+        displayValue: true,
+        font: "Martian Mono",
+        fontSize: 10,
+        textMargin: 2,
+        lineColor: "#0B0F19",
+        background: "transparent"
+      });
+    } catch (e) {
+      console.warn('Receipt barcode generation failed', e);
+    }
+  }
+
   openModal(DOM.receiptModal, DOM.receiptModalCard);
 }
 
@@ -1853,6 +1961,15 @@ function renderInventoryTable() {
 
     tr.querySelector('.edit-product-btn').addEventListener('click', () => triggerEditProduct(p));
     tr.querySelector('.delete-product-btn').addEventListener('click', () => triggerDeleteProduct(p));
+
+    const barcodePill = tr.querySelector('.product-barcode-pill');
+    if (barcodePill) {
+      barcodePill.title = 'Click to view/print scannable barcode label';
+      barcodePill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openBarcodeLabelModal(p);
+      });
+    }
 
     tbody.appendChild(tr);
   });
@@ -2268,6 +2385,7 @@ function setupEventListeners() {
       closeModal(DOM.consoleModal, DOM.consoleModalCard);
       closeModal(DOM.modifierModal, DOM.modifierModalCard);
       closeModal(DOM.barcodeModal, DOM.barcodeModalCard);
+      closeModal(DOM.barcodeLabelModal, DOM.barcodeLabelModalCard);
       closeModal(DOM.deleteConfirmModal, DOM.deleteConfirmModalCard);
       closeModal(DOM.editProductModal, DOM.editProductModalCard);
       closeModal(DOM.parkedOrdersModal, DOM.parkedOrdersModalCard);
@@ -2277,9 +2395,11 @@ function setupEventListeners() {
   // Mobile Cart Drawer Toggles
   const openMobileCart = () => {
     if (DOM.ticketPane) DOM.ticketPane.classList.add('mobile-open');
+    if (DOM.mobileOrderFloatingBar) DOM.mobileOrderFloatingBar.classList.add('drawer-open');
   };
   const closeMobileCart = () => {
     if (DOM.ticketPane) DOM.ticketPane.classList.remove('mobile-open');
+    if (DOM.mobileOrderFloatingBar) DOM.mobileOrderFloatingBar.classList.remove('drawer-open');
   };
 
   if (DOM.mobileCartTrigger) DOM.mobileCartTrigger.addEventListener('click', openMobileCart);
@@ -2336,14 +2456,37 @@ function setupEventListeners() {
 
   // Barcode modal & Camera Scanner
   DOM.btnOpenBarcodeModal.addEventListener('click', () => {
+    stopCameraScanner();
+    const sampleProd = AppState.products.find(p => p.barcode === '8901001') || AppState.products[0];
+    if (sampleProd) {
+      renderScannableBarcodePreview(sampleProd.barcode || sampleProd.id, sampleProd.name, sampleProd.price);
+      if (DOM.barcodeManualInput) DOM.barcodeManualInput.value = sampleProd.barcode || sampleProd.id;
+    }
     openModal(DOM.barcodeModal, DOM.barcodeModalCard);
-    setTimeout(() => DOM.barcodeManualInput.focus(), 100);
+    setTimeout(() => {
+      if (DOM.barcodeManualInput) DOM.barcodeManualInput.focus();
+    }, 100);
   });
+
   DOM.btnCloseBarcode.addEventListener('click', () => {
     stopCameraScanner();
     closeModal(DOM.barcodeModal, DOM.barcodeModalCard);
   });
   DOM.btnSubmitBarcode.addEventListener('click', handleManualBarcodeLookup);
+
+  // Live scannable barcode preview updates when typing in manual input
+  if (DOM.barcodeManualInput) {
+    DOM.barcodeManualInput.addEventListener('input', (e) => {
+      const code = e.target.value.trim();
+      if (code) {
+        const matchedProd = AppState.products.find(p => 
+          String(p.barcode || '').toLowerCase() === code.toLowerCase() ||
+          String(p.id) === code
+        );
+        renderScannableBarcodePreview(code, matchedProd?.name || 'Catalog Item', matchedProd?.price);
+      }
+    });
+  }
 
   if (DOM.btnToggleCameraScanner) {
     DOM.btnToggleCameraScanner.addEventListener('click', toggleCameraScanner);
@@ -2369,13 +2512,42 @@ function setupEventListeners() {
     });
   }
 
+  // Quick sample buttons: update manual input and render literal scannable barcode
   document.querySelectorAll('.quick-barcode-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const code = btn.getAttribute('data-code');
-      DOM.barcodeManualInput.value = code;
-      handleManualBarcodeLookup();
+      if (DOM.barcodeManualInput) DOM.barcodeManualInput.value = code;
+      const matchedProd = AppState.products.find(p => String(p.barcode || p.id) === String(code));
+      renderScannableBarcodePreview(code, matchedProd?.name, matchedProd?.price);
     });
   });
+
+  // Dedicated Product Barcode Label Modal Events
+  if (DOM.btnCloseBarcodeLabel) {
+    DOM.btnCloseBarcodeLabel.addEventListener('click', () => {
+      closeModal(DOM.barcodeLabelModal, DOM.barcodeLabelModalCard);
+    });
+  }
+
+  if (DOM.btnPrintBarcodeLabel) {
+    DOM.btnPrintBarcodeLabel.addEventListener('click', () => {
+      document.body.classList.add('printing-barcode-label');
+      window.print();
+      setTimeout(() => {
+        document.body.classList.remove('printing-barcode-label');
+      }, 500);
+    });
+  }
+
+  if (DOM.btnAddBarcodeToCart) {
+    DOM.btnAddBarcodeToCart.addEventListener('click', () => {
+      if (activeLabelProduct) {
+        addToCart(activeLabelProduct);
+        showToast(`Added ${activeLabelProduct.name} to order.`);
+        closeModal(DOM.barcodeLabelModal, DOM.barcodeLabelModalCard);
+      }
+    });
+  }
 
   // Delete Confirmation Modal
   DOM.btnConfirmDelete.addEventListener('click', confirmDeleteProduct);

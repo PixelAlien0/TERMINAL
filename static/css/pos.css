@@ -1137,6 +1137,9 @@ body {
 
 /* Product Card Barcode & Stock Tags */
 .product-barcode-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   font-size: 10px;
   font-family: var(--font-mono);
   color: var(--text-secondary);
@@ -1144,8 +1147,21 @@ body {
   background: #F1F5F9;
   border: 1px solid #CBD5E1;
   padding: 2px 6px;
-  border-radius: 3px;
+  border-radius: 4px;
   letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.product-barcode-pill:hover {
+  background: #0284C7;
+  color: #FFFFFF;
+  border-color: #0284C7;
+}
+
+.product-barcode-pill svg {
+  color: inherit;
 }
 
 .stock-tag {
@@ -2733,7 +2749,7 @@ input:checked + .toggle-slider:before {
 }
 
 .mobile-order-floating-bar {
-  display: none;
+  display: none !important;
   position: fixed;
   bottom: 14px;
   left: 12px;
@@ -2752,9 +2768,14 @@ input:checked + .toggle-slider:before {
   user-select: none;
 }
 
-.mobile-order-floating-bar.active {
-  display: flex;
-  transform: translateY(0);
+/* Force-hide all mobile-only widgets on desktop viewports (> 860px) */
+@media (min-width: 861px) {
+  .mobile-order-floating-bar,
+  .mobile-order-floating-bar.active,
+  .mobile-ticket-nav-bar,
+  .mobile-cart-trigger {
+    display: none !important;
+  }
 }
 
 .mobile-bar-info {
@@ -2914,9 +2935,21 @@ input:checked + .toggle-slider:before {
     gap: 5px;
   }
 
-  /* Hide floating order bar when modal is active */
+  /* Mobile Floating Order Bar */
+  .mobile-order-floating-bar {
+    display: none;
+  }
+
+  .mobile-order-floating-bar.active {
+    display: flex !important;
+    transform: translateY(0);
+  }
+
+  /* Hide floating order bar when modal is active, drawer is open, or explicitly suppressed */
   body.modal-open .mobile-order-floating-bar,
-  .modal-overlay.active ~ .mobile-order-floating-bar {
+  .modal-overlay.active ~ .mobile-order-floating-bar,
+  .pos-ticket-pane.mobile-open ~ .mobile-order-floating-bar,
+  .mobile-order-floating-bar.drawer-open {
     display: none !important;
   }
 
@@ -2928,11 +2961,11 @@ input:checked + .toggle-slider:before {
     overflow-y: auto;
     overflow-x: hidden;
     position: relative;
-    padding-bottom: 78px; /* space for mobile bar */
+    padding-bottom: 84px; /* space for mobile bar */
   }
 
   .pos-catalog-pane {
-    padding: 14px 12px;
+    padding: 14px 12px 96px 12px; /* ensure bottom pagination is never obscured */
     overflow-y: visible;
     width: 100%;
     gap: 14px;
@@ -3206,17 +3239,35 @@ input:checked + .toggle-slider:before {
 ---------------------------------------------------------------- */
 @media print {
   body * {
-    visibility: hidden;
+    visibility: hidden !important;
   }
-  .receipt-paper, .receipt-paper * {
-    visibility: visible;
+  
+  /* Print Thermal Receipt */
+  body:not(.printing-barcode-label) .receipt-paper,
+  body:not(.printing-barcode-label) .receipt-paper * {
+    visibility: visible !important;
   }
-  .receipt-paper {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 80mm;
-    box-shadow: none;
-    padding: 0;
+  body:not(.printing-barcode-label) .receipt-paper {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 80mm !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  /* Print Barcode Shelf Tag Label */
+  body.printing-barcode-label #printableBarcodeLabel,
+  body.printing-barcode-label #printableBarcodeLabel * {
+    visibility: visible !important;
+  }
+  body.printing-barcode-label #printableBarcodeLabel {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 65mm !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 2mm !important;
   }
 }
