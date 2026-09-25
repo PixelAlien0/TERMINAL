@@ -1,0 +1,445 @@
+[
+    {
+        "id": 101,
+        "name": "Barako Espresso",
+        "category": "Beverages",
+        "barcode": "8901001",
+        "price": 120.0,
+        "stock": 48,
+        "available_modifiers": [
+            {
+                "name": "Extra Shot",
+                "price": 40.0
+            },
+            {
+                "name": "Decaf",
+                "price": 0.0
+            }
+        ]
+    },
+    {
+        "id": 102,
+        "name": "Spanish Latte",
+        "category": "Beverages",
+        "barcode": "8901002",
+        "price": 170.0,
+        "stock": 45,
+        "available_modifiers": [
+            {
+                "name": "Oat Milk",
+                "price": 35.0
+            },
+            {
+                "name": "Vanilla Syrup",
+                "price": 25.0
+            },
+            {
+                "name": "Extra Shot",
+                "price": 40.0
+            }
+        ]
+    },
+    {
+        "id": 103,
+        "name": "Caramel Macchiato",
+        "category": "Beverages",
+        "barcode": "8901003",
+        "price": 180.0,
+        "stock": 35,
+        "available_modifiers": [
+            {
+                "name": "Almond Milk",
+                "price": 35.0
+            },
+            {
+                "name": "Extra Drizzle",
+                "price": 20.0
+            },
+            {
+                "name": "Extra Shot",
+                "price": 40.0
+            }
+        ]
+    },
+    {
+        "id": 104,
+        "name": "Iced Matcha Latte",
+        "category": "Beverages",
+        "barcode": "8901004",
+        "price": 175.0,
+        "stock": 30,
+        "available_modifiers": [
+            {
+                "name": "Oat Milk",
+                "price": 35.0
+            },
+            {
+                "name": "Sweetened",
+                "price": 0.0
+            }
+        ]
+    },
+    {
+        "id": 105,
+        "name": "Fresh Calamansi Juice",
+        "category": "Beverages",
+        "barcode": "8901005",
+        "price": 65.0,
+        "stock": 60,
+        "available_modifiers": [
+            {
+                "name": "Less Ice",
+                "price": 0.0
+            },
+            {
+                "name": "Honey Infusion",
+                "price": 20.0
+            }
+        ]
+    },
+    {
+        "id": 106,
+        "name": "Bottled Mineral Water",
+        "category": "Beverages",
+        "barcode": "8901006",
+        "price": 35.0,
+        "stock": 80,
+        "available_modifiers": []
+    },
+    {
+        "id": 107,
+        "name": "San Miguel Pale Pilsen",
+        "category": "Beverages",
+        "barcode": "8901007",
+        "price": 85.0,
+        "stock": 40,
+        "available_modifiers": [
+            {
+                "name": "Chilled Mug",
+                "price": 0.0
+            }
+        ]
+    },
+    {
+        "id": 108,
+        "name": "Brown Sugar Milk Tea",
+        "category": "Beverages",
+        "barcode": "8901008",
+        "price": 145.0,
+        "stock": 25,
+        "available_modifiers": [
+            {
+                "name": "Extra Pearls",
+                "price": 25.0
+            },
+            {
+                "name": "50% Sugar",
+                "price": 0.0
+            }
+        ]
+    },
+    {
+        "id": 109,
+        "name": "Special Butter Ensaymada",
+        "category": "Bakery & Pastries",
+        "barcode": "8901009",
+        "price": 75.0,
+        "stock": 35,
+        "available_modifiers": [
+            {
+                "name": "Warmed Up",
+                "price": 0.0
+            },
+            {
+                "name": "Extra Grated Cheese",
+                "price": 20.0
+            }
+        ]
+    },
+    {
+        "id": 110,
+        "name": "Ham & Cheese Croissant",
+        "category": "Bakery & Pastries",
+        "barcode": "8901010",
+        "price": 145.0,
+        "stock": 20,
+        "available_modifiers": [
+            {
+                "name": "Toasted",
+                "price": 0.0
+            },
+            {
+                "name": "Extra Cheese",
+                "price": 25.0
+            }
+        ]
+    },
+    {
+        "id": 111,
+        "name": "Special Ube Halaya Pandesal",
+        "category": "Bakery & Pastries",
+        "barcode": "8901011",
+        "price": 85.0,
+        "stock": 25,
+        "available_modifiers": [
+            {
+                "name": "Warmed Up",
+                "price": 0.0
+            }
+        ]
+    },
+    {
+        "id": 112,
+        "name": "Blueberry Crumble Muffin",
+        "category": "Bakery & Pastries",
+        "barcode": "8901012",
+        "price": 110.0,
+        "stock": 20,
+        "available_modifiers": [
+            {
+                "name": "Warmed Up",
+                "price": 0.0
+            }
+        ]
+    },
+    {
+        "id": 113,
+        "name": "Artisan Sourdough Batard",
+        "category": "Bakery & Pastries",
+        "barcode": "8901013",
+        "price": 240.0,
+        "stock": 32,
+        "available_modifiers": [
+            {
+                "name": "Pre-Sliced",
+                "price": 0.0
+            }
+        ]
+    },
+    {
+        "id": 114,
+        "name": "Double Chocolate Cookie",
+        "category": "Bakery & Pastries",
+        "barcode": "8901014",
+        "price": 60.0,
+        "stock": 30,
+        "available_modifiers": []
+    },
+    {
+        "id": 115,
+        "name": "Red Velvet Cupcake",
+        "category": "Bakery & Pastries",
+        "barcode": "8901015",
+        "price": 95.0,
+        "stock": 35,
+        "available_modifiers": []
+    },
+    {
+        "id": 116,
+        "name": "Beef Tapa Silog Bowl",
+        "category": "Rice Meals & Silog",
+        "barcode": "8901016",
+        "price": 220.0,
+        "stock": 24,
+        "available_modifiers": [
+            {
+                "name": "Extra Garlic Rice",
+                "price": 35.0
+            },
+            {
+                "name": "Sunny Side Up",
+                "price": 20.0
+            },
+            {
+                "name": "Atchara Side",
+                "price": 15.0
+            }
+        ]
+    },
+    {
+        "id": 117,
+        "name": "Pork Tocino Silog Bowl",
+        "category": "Rice Meals & Silog",
+        "barcode": "8901017",
+        "price": 195.0,
+        "stock": 22,
+        "available_modifiers": [
+            {
+                "name": "Extra Garlic Rice",
+                "price": 35.0
+            },
+            {
+                "name": "Extra Egg",
+                "price": 20.0
+            }
+        ]
+    },
+    {
+        "id": 118,
+        "name": "Chicken Inasal with Rice",
+        "category": "Rice Meals & Silog",
+        "barcode": "8901018",
+        "price": 210.0,
+        "stock": 35,
+        "available_modifiers": [
+            {
+                "name": "Chicken Oil Dip",
+                "price": 10.0
+            },
+            {
+                "name": "Extra Rice",
+                "price": 30.0
+            }
+        ]
+    },
+    {
+        "id": 119,
+        "name": "Pork Adobo Garlic Rice",
+        "category": "Rice Meals & Silog",
+        "barcode": "8901019",
+        "price": 230.0,
+        "stock": 20,
+        "available_modifiers": [
+            {
+                "name": "Spicy Chili Flakes",
+                "price": 0.0
+            },
+            {
+                "name": "Extra Sauce",
+                "price": 10.0
+            }
+        ]
+    },
+    {
+        "id": 120,
+        "name": "Crispy Lechon Kawali Bowl",
+        "category": "Rice Meals & Silog",
+        "barcode": "8901020",
+        "price": 260.0,
+        "stock": 27,
+        "available_modifiers": [
+            {
+                "name": "Liver Sauce Dip",
+                "price": 0.0
+            },
+            {
+                "name": "Spicy Vinegar Dip",
+                "price": 0.0
+            }
+        ]
+    },
+    {
+        "id": 121,
+        "name": "Bangus Belly Rice Bowl",
+        "category": "Rice Meals & Silog",
+        "barcode": "8901021",
+        "price": 245.0,
+        "stock": 16,
+        "available_modifiers": [
+            {
+                "name": "Garlic Rice Upgrade",
+                "price": 15.0
+            }
+        ]
+    },
+    {
+        "id": 122,
+        "name": "Special Halo-Halo Supreme",
+        "category": "Snacks & Desserts",
+        "barcode": "8901022",
+        "price": 165.0,
+        "stock": 30,
+        "available_modifiers": [
+            {
+                "name": "Extra Ube Scoop",
+                "price": 30.0
+            },
+            {
+                "name": "Extra Leche Flan",
+                "price": 25.0
+            }
+        ]
+    },
+    {
+        "id": 123,
+        "name": "Caramel Leche Flan Slice",
+        "category": "Snacks & Desserts",
+        "barcode": "8901023",
+        "price": 90.0,
+        "stock": 20,
+        "available_modifiers": []
+    },
+    {
+        "id": 124,
+        "name": "Crispy Turon with Langka",
+        "category": "Snacks & Desserts",
+        "barcode": "8901024",
+        "price": 55.0,
+        "stock": 40,
+        "available_modifiers": [
+            {
+                "name": "Caramel Drizzle",
+                "price": 10.0
+            }
+        ]
+    },
+    {
+        "id": 125,
+        "name": "Special Cassava Cake",
+        "category": "Snacks & Desserts",
+        "barcode": "8901025",
+        "price": 80.0,
+        "stock": 25,
+        "available_modifiers": []
+    },
+    {
+        "id": 126,
+        "name": "Crispy Lumpiang Shanghai (6pcs)",
+        "category": "Snacks & Desserts",
+        "barcode": "8901026",
+        "price": 120.0,
+        "stock": 28,
+        "available_modifiers": [
+            {
+                "name": "Sweet Chili Dip",
+                "price": 0.0
+            }
+        ]
+    },
+    {
+        "id": 127,
+        "name": "Philippine Sweet Mango (1kg)",
+        "category": "Fresh Produce",
+        "barcode": "8901027",
+        "price": 180.0,
+        "stock": 35,
+        "available_modifiers": []
+    },
+    {
+        "id": 128,
+        "name": "Cavendish Banana (1kg)",
+        "category": "Fresh Produce",
+        "barcode": "8901028",
+        "price": 95.0,
+        "stock": 40,
+        "available_modifiers": []
+    },
+    {
+        "id": 129,
+        "name": "Solo Red Papaya",
+        "category": "Fresh Produce",
+        "barcode": "8901029",
+        "price": 85.0,
+        "stock": 18,
+        "available_modifiers": []
+    },
+    {
+        "id": 130,
+        "name": "Fresh Calamansi Pack (500g)",
+        "category": "Fresh Produce",
+        "barcode": "8901030",
+        "price": 60.0,
+        "stock": 25,
+        "available_modifiers": []
+    }
+]

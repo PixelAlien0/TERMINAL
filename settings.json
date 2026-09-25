@@ -1,0 +1,10 @@
+{
+    "tax_enabled": true,
+    "tax_rate": 12.0,
+    "tax_name": "VAT",
+    "store_name": "Keith's Market",
+    "branch": "Terminal 06",
+    "address": "100 Retail Boulevard, BGC, Taguig",
+    "phone": "+63 (02) 8123-4567",
+    "currency_symbol": "\u20b1"
+}

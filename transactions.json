@@ -1,0 +1,1133 @@
+[
+    {
+        "id": "TX-20260923175317-101",
+        "timestamp": "2026-09-23 17:53:17",
+        "cashier": "Staff",
+        "items": [
+            {
+                "id": 101,
+                "name": "Espresso",
+                "price": 2.5,
+                "qty": 2,
+                "total": 5.0
+            }
+        ],
+        "subtotal": 5.0,
+        "payment": 15.0,
+        "change": 10.0,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Main Store         \n            +1 (555) 019-2834             \n==========================================\nReceipt ID: TX-20260923175317-101\nDate/Time:  2026-09-23 17:53:17\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nEspresso              2    $2.50     $5.00\n------------------------------------------\nSubtotal:                            $5.00\nCash Tendered:                      $15.00\nChange Given:                       $10.00\n==========================================\n       Thank you for your business!       \n=========================================="
+    },
+    {
+        "id": "TX-20260923175501-101",
+        "timestamp": "2026-09-23 17:55:01",
+        "cashier": "Terminal 1",
+        "items": [
+            {
+                "id": 101,
+                "name": "Espresso",
+                "price": 2.5,
+                "qty": 1,
+                "total": 2.5
+            }
+        ],
+        "subtotal": 2.5,
+        "payment": 10.0,
+        "change": 7.5,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Main Store         \n            +1 (555) 019-2834             \n==========================================\nReceipt ID: TX-20260923175501-101\nDate/Time:  2026-09-23 17:55:01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nEspresso              1    $2.50     $2.50\n------------------------------------------\nSubtotal:                            $2.50\nCash Tendered:                      $10.00\nChange Given:                        $7.50\n==========================================\n       Thank you for your business!       \n=========================================="
+    },
+    {
+        "id": "TX-20260923180219-108",
+        "timestamp": "2026-09-23 18:02:19",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 108,
+                "name": "Orange",
+                "price": 5.0,
+                "qty": 40,
+                "total": 200.0
+            }
+        ],
+        "subtotal": 200.0,
+        "payment": 1000.0,
+        "change": 800.0,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Main Store         \n            +1 (555) 019-2834             \n==========================================\nReceipt ID: TX-20260923180219-108\nDate/Time:  2026-09-23 18:02:19\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nOrange                40   $5.00   $200.00\n------------------------------------------\nSubtotal:                          $200.00\nCash Tendered:                    $1000.00\nChange Given:                      $800.00\n==========================================\n       Thank you for your business!       \n=========================================="
+    },
+    {
+        "id": "TX-20260923180946-101",
+        "timestamp": "2026-09-23 18:09:46",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Espresso",
+                "price": 2.5,
+                "qty": 2,
+                "total": 5.0
+            },
+            {
+                "id": 102,
+                "name": "Latte",
+                "price": 3.75,
+                "qty": 1,
+                "total": 3.75
+            }
+        ],
+        "subtotal": 8.75,
+        "payment": 20.0,
+        "change": 11.25,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Main Store         \n            +1 (555) 019-2834             \n==========================================\nReceipt ID: TX-20260923180946-101\nDate/Time:  2026-09-23 18:09:46\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nEspresso              2    $2.50     $5.00\nLatte                 1    $3.75     $3.75\n------------------------------------------\nSubtotal:                            $8.75\nCash Tendered:                      $20.00\nChange Given:                       $11.25\n==========================================\n       Thank you for your business!       \n=========================================="
+    },
+    {
+        "id": "TX-20260923181636-101",
+        "timestamp": "2026-09-23 18:16:36",
+        "cashier": "Staff",
+        "items": [
+            {
+                "id": 101,
+                "name": "Espresso",
+                "price": 2.5,
+                "qty": 2,
+                "total": 5.0
+            }
+        ],
+        "subtotal": 5.0,
+        "payment": 15.0,
+        "change": 10.0,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Main Store         \n            +1 (555) 019-2834             \n==========================================\nReceipt ID: TX-20260923181636-101\nDate/Time:  2026-09-23 18:16:36\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nEspresso              2    $2.50     $5.00\n------------------------------------------\nSubtotal:                            $5.00\nCash Tendered:                      $15.00\nChange Given:                       $10.00\n==========================================\n       Thank you for your business!       \n=========================================="
+    },
+    {
+        "id": "TX-20260924013050-101",
+        "timestamp": "2026-09-24 01:30:50",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Espresso",
+                "base_price": 2.5,
+                "unit_price": 3.0,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 6.0
+            }
+        ],
+        "subtotal": 6.0,
+        "tax_rate": 10.0,
+        "tax_amount": 0.6,
+        "total_due": 6.6,
+        "payment": 10.0,
+        "change": 3.4,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Main Store         \n            +1 (555) 019-2834             \n==========================================\nReceipt ID: TX-20260924013050-101\nDate/Time:  2026-09-24 01:30:50\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nEspresso              2    $3.00     $6.00\n  + Oat Milk (+$0.50)             \n  * Note: Extra hot                       \n------------------------------------------\nSubtotal:                            $6.00\nSales Tax (10.00%):                  $0.60\nTotal Due:                           $6.60\nCash Tendered:                      $10.00\nChange Given:                        $3.40\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924013237-101",
+        "timestamp": "2026-09-24 01:32:37",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Espresso",
+                "base_price": 2.5,
+                "unit_price": 3.25,
+                "qty": 1,
+                "modifiers": [
+                    {
+                        "name": "Extra Shot",
+                        "price": 0.75
+                    }
+                ],
+                "notes": "Dine-in, extra hot",
+                "total": 3.25
+            }
+        ],
+        "subtotal": 3.25,
+        "tax_rate": 8.25,
+        "tax_amount": 0.27,
+        "total_due": 3.52,
+        "payment": 5.0,
+        "change": 1.48,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Main Store         \n            +1 (555) 019-2834             \n==========================================\nReceipt ID: TX-20260924013237-101\nDate/Time:  2026-09-24 01:32:37\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nEspresso              1    $3.25     $3.25\n  + Extra Shot (+$0.75)           \n  * Note: Dine-in, extra hot              \n------------------------------------------\nSubtotal:                            $3.25\nSales Tax (8.25%):                   $0.27\nTotal Due:                           $3.52\nCash Tendered:                       $5.00\nChange Given:                        $1.48\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924013539-101",
+        "timestamp": "2026-09-24 01:35:39",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Espresso",
+                "base_price": 2.5,
+                "unit_price": 3.0,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 6.0
+            }
+        ],
+        "subtotal": 6.0,
+        "tax_rate": 10.0,
+        "tax_amount": 0.6,
+        "total_due": 6.6,
+        "payment": 10.0,
+        "change": 3.4,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Main Store         \n            +1 (555) 019-2834             \n==========================================\nReceipt ID: TX-20260924013539-101\nDate/Time:  2026-09-24 01:35:39\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nEspresso              2    $3.00     $6.00\n  + Oat Milk (+$0.50)             \n  * Note: Extra hot                       \n------------------------------------------\nSubtotal:                            $6.00\nSales Tax (10.00%):                  $0.60\nTotal Due:                           $6.60\nCash Tendered:                      $10.00\nChange Given:                        $3.40\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924013758-101",
+        "timestamp": "2026-09-24 01:37:58",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Espresso",
+                "base_price": 2.5,
+                "unit_price": 3.0,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 6.0
+            }
+        ],
+        "subtotal": 6.0,
+        "tax_rate": 10.0,
+        "tax_amount": 0.6,
+        "total_due": 6.6,
+        "payment": 10.0,
+        "change": 3.4,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Main Store         \n            +1 (555) 019-2834             \n==========================================\nReceipt ID: TX-20260924013758-101\nDate/Time:  2026-09-24 01:37:58\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nEspresso              2    $3.00     $6.00\n  + Oat Milk (+$0.50)             \n  * Note: Extra hot                       \n------------------------------------------\nSubtotal:                            $6.00\nSales Tax (10.00%):                  $0.60\nTotal Due:                           $6.60\nCash Tendered:                      $10.00\nChange Given:                        $3.40\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924014144-106",
+        "timestamp": "2026-09-24 01:41:44",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 106,
+                "name": "Bottled Water",
+                "base_price": 1.5,
+                "unit_price": 1.5,
+                "qty": 20,
+                "modifiers": [],
+                "notes": "",
+                "total": 30.0
+            }
+        ],
+        "subtotal": 30.0,
+        "tax_rate": 8.25,
+        "tax_amount": 2.48,
+        "total_due": 32.48,
+        "payment": 100.0,
+        "change": 67.52,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Main Store         \n            +1 (555) 019-2834             \n==========================================\nReceipt ID: TX-20260924014144-106\nDate/Time:  2026-09-24 01:41:44\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBottled Water         20   $1.50    $30.00\n------------------------------------------\nSubtotal:                           $30.00\nSales Tax (8.25%):                   $2.48\nTotal Due:                          $32.48\nCash Tendered:                     $100.00\nChange Given:                       $67.52\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924014555-101",
+        "timestamp": "2026-09-24 01:45:55",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Espresso",
+                "base_price": 2.5,
+                "unit_price": 3.0,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 6.0
+            }
+        ],
+        "subtotal": 6.0,
+        "tax_rate": 10.0,
+        "tax_amount": 0.6,
+        "total_due": 6.6,
+        "payment": 10.0,
+        "change": 3.4,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Main Store         \n            +1 (555) 019-2834             \n==========================================\nReceipt ID: TX-20260924014555-101\nDate/Time:  2026-09-24 01:45:55\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nEspresso              2    $3.00     $6.00\n  + Oat Milk (+$0.50)             \n  * Note: Extra hot                       \n------------------------------------------\nSubtotal:                            $6.00\nSales Tax (10.00%):                  $0.60\nTotal Due:                           $6.60\nCash Tendered:                      $10.00\nChange Given:                        $3.40\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924014610-101",
+        "timestamp": "2026-09-24 01:46:10",
+        "cashier": "Sync Verification Agent",
+        "items": [
+            {
+                "id": 101,
+                "name": "Espresso",
+                "base_price": 2.5,
+                "unit_price": 3.25,
+                "qty": 1,
+                "modifiers": [
+                    {
+                        "name": "Extra Shot",
+                        "price": 0.75
+                    }
+                ],
+                "notes": "Sync Test",
+                "total": 3.25
+            }
+        ],
+        "subtotal": 3.25,
+        "tax_rate": 8.25,
+        "tax_amount": 0.27,
+        "total_due": 3.52,
+        "payment": 10.0,
+        "change": 6.48,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Main Store         \n            +1 (555) 019-2834             \n==========================================\nReceipt ID: TX-20260924014610-101\nDate/Time:  2026-09-24 01:46:10\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nEspresso              1    $3.25     $3.25\n  + Extra Shot (+$0.75)           \n  * Note: Sync Test                       \n------------------------------------------\nSubtotal:                            $3.25\nSales Tax (8.25%):                   $0.27\nTotal Due:                           $3.52\nCash Tendered:                      $10.00\nChange Given:                        $6.48\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924014842-101",
+        "timestamp": "2026-09-24 01:48:42",
+        "cashier": "Sync Verification Agent",
+        "items": [
+            {
+                "id": 101,
+                "name": "Espresso",
+                "base_price": 2.5,
+                "unit_price": 3.25,
+                "qty": 1,
+                "modifiers": [
+                    {
+                        "name": "Extra Shot",
+                        "price": 0.75
+                    }
+                ],
+                "notes": "Sync Test",
+                "total": 3.25
+            }
+        ],
+        "subtotal": 3.25,
+        "tax_rate": 8.25,
+        "tax_amount": 0.27,
+        "total_due": 3.52,
+        "payment": 10.0,
+        "change": 6.48,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Main Store         \n            +1 (555) 019-2834             \n==========================================\nReceipt ID: TX-20260924014842-101\nDate/Time:  2026-09-24 01:48:42\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nEspresso              1    $3.25     $3.25\n  + Extra Shot (+$0.75)           \n  * Note: Sync Test                       \n------------------------------------------\nSubtotal:                            $3.25\nSales Tax (8.25%):                   $0.27\nTotal Due:                           $3.52\nCash Tendered:                      $10.00\nChange Given:                        $6.48\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924014845-101",
+        "timestamp": "2026-09-24 01:48:45",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Espresso",
+                "base_price": 2.5,
+                "unit_price": 3.0,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 6.0
+            }
+        ],
+        "subtotal": 6.0,
+        "tax_rate": 10.0,
+        "tax_amount": 0.6,
+        "total_due": 6.6,
+        "payment": 10.0,
+        "change": 3.4,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Main Store         \n            +1 (555) 019-2834             \n==========================================\nReceipt ID: TX-20260924014845-101\nDate/Time:  2026-09-24 01:48:45\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nEspresso              2    $3.00     $6.00\n  + Oat Milk (+$0.50)             \n  * Note: Extra hot                       \n------------------------------------------\nSubtotal:                            $6.00\nSales Tax (10.00%):                  $0.60\nTotal Due:                           $6.60\nCash Tendered:                      $10.00\nChange Given:                        $3.40\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924015152-109",
+        "timestamp": "2026-09-24 01:51:52",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 109,
+                "name": "Iced Matcha Latte",
+                "base_price": 4.75,
+                "unit_price": 4.75,
+                "qty": 7,
+                "modifiers": [],
+                "notes": "",
+                "total": 33.25
+            }
+        ],
+        "subtotal": 33.25,
+        "tax_rate": 8.25,
+        "tax_amount": 2.74,
+        "total_due": 35.99,
+        "payment": 35.99,
+        "change": 0.0,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Main Store         \n            +1 (555) 019-2834             \n==========================================\nReceipt ID: TX-20260924015152-109\nDate/Time:  2026-09-24 01:51:52\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nIced Matcha Latte     7    $4.75    $33.25\n------------------------------------------\nSubtotal:                           $33.25\nSales Tax (8.25%):                   $2.74\nTotal Due:                          $35.99\nCash Tendered:                      $35.99\nChange Given:                        $0.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924015325-101",
+        "timestamp": "2026-09-24 01:53:25",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Espresso",
+                "base_price": 2.5,
+                "unit_price": 3.0,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 6.0
+            }
+        ],
+        "subtotal": 6.0,
+        "tax_rate": 10.0,
+        "tax_amount": 0.6,
+        "total_due": 6.6,
+        "payment": 10.0,
+        "change": 3.4,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Main Store         \n            +1 (555) 019-2834             \n==========================================\nReceipt ID: TX-20260924015325-101\nDate/Time:  2026-09-24 01:53:25\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nEspresso              2    $3.00     $6.00\n  + Oat Milk (+$0.50)             \n  * Note: Extra hot                       \n------------------------------------------\nSubtotal:                            $6.00\nSales Tax (10.00%):                  $0.60\nTotal Due:                           $6.60\nCash Tendered:                      $10.00\nChange Given:                        $3.40\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924015329-101",
+        "timestamp": "2026-09-24 01:53:29",
+        "cashier": "Sync Verification Agent",
+        "items": [
+            {
+                "id": 101,
+                "name": "Espresso",
+                "base_price": 2.5,
+                "unit_price": 3.25,
+                "qty": 1,
+                "modifiers": [
+                    {
+                        "name": "Extra Shot",
+                        "price": 0.75
+                    }
+                ],
+                "notes": "Sync Test",
+                "total": 3.25
+            }
+        ],
+        "subtotal": 3.25,
+        "tax_rate": 8.25,
+        "tax_amount": 0.27,
+        "total_due": 3.52,
+        "payment": 10.0,
+        "change": 6.48,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Main Store         \n            +1 (555) 019-2834             \n==========================================\nReceipt ID: TX-20260924015329-101\nDate/Time:  2026-09-24 01:53:29\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nEspresso              1    $3.25     $3.25\n  + Extra Shot (+$0.75)           \n  * Note: Sync Test                       \n------------------------------------------\nSubtotal:                            $3.25\nSales Tax (8.25%):                   $0.27\nTotal Due:                           $3.52\nCash Tendered:                      $10.00\nChange Given:                        $6.48\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924020224-116",
+        "timestamp": "2026-09-24 02:02:24",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 116,
+                "name": "Beef Tapa Silog Bowl",
+                "base_price": 220.0,
+                "unit_price": 220.0,
+                "qty": 1,
+                "modifiers": [],
+                "notes": "",
+                "total": 220.0
+            },
+            {
+                "id": 120,
+                "name": "Crispy Lechon Kawali Bowl",
+                "base_price": 260.0,
+                "unit_price": 260.0,
+                "qty": 7,
+                "modifiers": [],
+                "notes": "",
+                "total": 1820.0
+            },
+            {
+                "id": 118,
+                "name": "Chicken Inasal with Rice",
+                "base_price": 210.0,
+                "unit_price": 210.0,
+                "qty": 3,
+                "modifiers": [],
+                "notes": "",
+                "total": 630.0
+            }
+        ],
+        "subtotal": 2670.0,
+        "tax_rate": 12.0,
+        "tax_amount": 320.4,
+        "total_due": 2990.4,
+        "payment": 6000.0,
+        "change": 3009.6,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Manila BGC         \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260924020224-116\nDate/Time:  2026-09-24 02:02:24\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBeef Tapa Silog Bowl  1    $220.00 $220.00\nCrispy Lechon Kawali  7    $260.00$1820.00\nChicken Inasal with   3    $210.00 $630.00\n------------------------------------------\nSubtotal:                         $2670.00\nVAT (12%) (12.00%):                $320.40\nTotal Due:                        $2990.40\nCash Tendered:                    $6000.00\nChange Given:                     $3009.60\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924020256-101",
+        "timestamp": "2026-09-24 02:02:56",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Manila BGC         \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260924020256-101\nDate/Time:  2026-09-24 02:02:56\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot                       \n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (12%) (10.00%):                 \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924020259-101",
+        "timestamp": "2026-09-24 02:02:59",
+        "cashier": "Sync Verification Agent",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 145.0,
+                "qty": 1,
+                "modifiers": [
+                    {
+                        "name": "Extra Shot",
+                        "price": 25.0
+                    }
+                ],
+                "notes": "Sync Test",
+                "total": 145.0
+            }
+        ],
+        "subtotal": 145.0,
+        "tax_rate": 12.0,
+        "tax_amount": 17.4,
+        "total_due": 162.4,
+        "payment": 500.0,
+        "change": 337.6,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Manila BGC         \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260924020259-101\nDate/Time:  2026-09-24 02:02:59\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       1    $145.00 $145.00\n  + Extra Shot (+$25.00)          \n  * Note: Sync Test                       \n------------------------------------------\nSubtotal:                          $145.00\nVAT (12%) (12.00%):                 $17.40\nTotal Due:                         $162.40\nCash Tendered:                     $500.00\nChange Given:                      $337.60\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924020348-101",
+        "timestamp": "2026-09-24 02:03:48",
+        "cashier": "Sync Verification Agent",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 145.0,
+                "qty": 1,
+                "modifiers": [
+                    {
+                        "name": "Extra Shot",
+                        "price": 25.0
+                    }
+                ],
+                "notes": "Sync Test",
+                "total": 145.0
+            }
+        ],
+        "subtotal": 145.0,
+        "tax_rate": 12.0,
+        "tax_amount": 17.4,
+        "total_due": 162.4,
+        "payment": 500.0,
+        "change": 337.6,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Manila BGC         \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260924020348-101\nDate/Time:  2026-09-24 02:03:48\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       1    \u20b1145.00 \u20b1145.00\n  + Extra Shot (+\u20b125.00)          \n  * Note: Sync Test                       \n------------------------------------------\nSubtotal:                          \u20b1145.00\nVAT (12%) (12.00%):                 \u20b117.40\nTotal Due:                         \u20b1162.40\nCash Tendered:                     \u20b1500.00\nChange Given:                      \u20b1337.60\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924020609-112",
+        "timestamp": "2026-09-24 02:06:09",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 112,
+                "name": "Blueberry Crumble Muffin",
+                "base_price": 110.0,
+                "unit_price": 110.0,
+                "qty": 18,
+                "modifiers": [],
+                "notes": "",
+                "total": 1980.0
+            }
+        ],
+        "subtotal": 1980.0,
+        "tax_rate": 12.0,
+        "tax_amount": 237.6,
+        "total_due": 2217.6,
+        "payment": 2217.6,
+        "change": 0.0,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Manila BGC         \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260924020609-112\nDate/Time:  2026-09-24 02:06:09\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBlueberry Crumble Mu  18   \u20b1110.00\u20b11980.00\n------------------------------------------\nSubtotal:                         \u20b11980.00\nVAT (12%) (12.00%):                \u20b1237.60\nTotal Due:                        \u20b12217.60\nCash Tendered:                    \u20b12217.60\nChange Given:                        \u20b10.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924021050-101",
+        "timestamp": "2026-09-24 02:10:50",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Manila BGC         \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260924021050-101\nDate/Time:  2026-09-24 02:10:50\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot                       \n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (12%) (10.00%):                 \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924021054-101",
+        "timestamp": "2026-09-24 02:10:54",
+        "cashier": "Sync Verification Agent",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 145.0,
+                "qty": 1,
+                "modifiers": [
+                    {
+                        "name": "Extra Shot",
+                        "price": 25.0
+                    }
+                ],
+                "notes": "Sync Test",
+                "total": 145.0
+            }
+        ],
+        "subtotal": 145.0,
+        "tax_rate": 12.0,
+        "tax_amount": 17.4,
+        "total_due": 162.4,
+        "payment": 500.0,
+        "change": 337.6,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Manila BGC         \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260924021054-101\nDate/Time:  2026-09-24 02:10:54\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       1    \u20b1145.00 \u20b1145.00\n  + Extra Shot (+\u20b125.00)          \n  * Note: Sync Test                       \n------------------------------------------\nSubtotal:                          \u20b1145.00\nVAT (12%) (12.00%):                 \u20b117.40\nTotal Due:                         \u20b1162.40\nCash Tendered:                     \u20b1500.00\nChange Given:                      \u20b1337.60\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924021518-101",
+        "timestamp": "2026-09-24 02:15:18",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Manila BGC         \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260924021518-101\nDate/Time:  2026-09-24 02:15:18\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot                       \n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (12%) (10.00%):                 \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924021527-101",
+        "timestamp": "2026-09-24 02:15:27",
+        "cashier": "Sync Verification Agent",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 145.0,
+                "qty": 1,
+                "modifiers": [
+                    {
+                        "name": "Extra Shot",
+                        "price": 25.0
+                    }
+                ],
+                "notes": "Sync Test",
+                "total": 145.0
+            }
+        ],
+        "subtotal": 145.0,
+        "tax_rate": 12.0,
+        "tax_amount": 17.4,
+        "total_due": 162.4,
+        "payment": 500.0,
+        "change": 337.6,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Manila BGC         \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260924021527-101\nDate/Time:  2026-09-24 02:15:27\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       1    \u20b1145.00 \u20b1145.00\n  + Extra Shot (+\u20b125.00)          \n  * Note: Sync Test                       \n------------------------------------------\nSubtotal:                          \u20b1145.00\nVAT (12%) (12.00%):                 \u20b117.40\nTotal Due:                         \u20b1162.40\nCash Tendered:                     \u20b1500.00\nChange Given:                      \u20b1337.60\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924022105-101",
+        "timestamp": "2026-09-24 02:21:05",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Manila BGC         \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260924022105-101\nDate/Time:  2026-09-24 02:21:05\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot                       \n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (12%) (10.00%):                 \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260924022108-101",
+        "timestamp": "2026-09-24 02:21:08",
+        "cashier": "Sync Verification Agent",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 145.0,
+                "qty": 1,
+                "modifiers": [
+                    {
+                        "name": "Extra Shot",
+                        "price": 25.0
+                    }
+                ],
+                "notes": "Sync Test",
+                "total": 145.0
+            }
+        ],
+        "subtotal": 145.0,
+        "tax_rate": 12.0,
+        "tax_amount": 17.4,
+        "total_due": 162.4,
+        "payment": 500.0,
+        "change": 337.6,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Manila BGC         \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260924022108-101\nDate/Time:  2026-09-24 02:21:08\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       1    \u20b1145.00 \u20b1145.00\n  + Extra Shot (+\u20b125.00)          \n  * Note: Sync Test                       \n------------------------------------------\nSubtotal:                          \u20b1145.00\nVAT (12%) (12.00%):                 \u20b117.40\nTotal Due:                         \u20b1162.40\nCash Tendered:                     \u20b1500.00\nChange Given:                      \u20b1337.60\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260925184603-101",
+        "timestamp": "2026-09-25 18:46:03",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Manila BGC         \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260925184603-101\nDate/Time:  2026-09-25 18:46:03\nCashier:    Terminal 01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot                       \n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (12%) (10.00%):                 \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260925185330-101",
+        "timestamp": "2026-09-25 18:53:30",
+        "cashier": "Maria Santos",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.0,
+                "qty": 1,
+                "modifiers": [],
+                "notes": "",
+                "total": 120.0
+            }
+        ],
+        "subtotal": 120.0,
+        "tax_rate": 12.0,
+        "tax_amount": 14.4,
+        "total_due": 134.4,
+        "payment": 200.0,
+        "change": 65.6,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Manila BGC         \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260925185330-101\nDate/Time:  2026-09-25 18:53:30\nCashier:    Maria Santos\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       1    \u20b1120.00 \u20b1120.00\n------------------------------------------\nSubtotal:                          \u20b1120.00\nVAT (12%) (12.00%):                 \u20b114.40\nTotal Due:                         \u20b1134.40\nCash Tendered:                     \u20b1200.00\nChange Given:                       \u20b165.60\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260925185344-101",
+        "timestamp": "2026-09-25 18:53:44",
+        "cashier": "Maria Santos",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.0,
+                "qty": 1,
+                "modifiers": [],
+                "notes": "",
+                "total": 120.0
+            }
+        ],
+        "subtotal": 120.0,
+        "tax_rate": 12.0,
+        "tax_amount": 14.4,
+        "total_due": 134.4,
+        "payment": 200.0,
+        "change": 65.6,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Manila BGC         \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260925185344-101\nDate/Time:  2026-09-25 18:53:44\nCashier:    Maria Santos\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       1    \u20b1120.00 \u20b1120.00\n------------------------------------------\nSubtotal:                          \u20b1120.00\nVAT (12%) (12.00%):                 \u20b114.40\nTotal Due:                         \u20b1134.40\nCash Tendered:                     \u20b1200.00\nChange Given:                       \u20b165.60\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260925185353-101",
+        "timestamp": "2026-09-25 18:53:53",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Manila BGC         \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260925185353-101\nDate/Time:  2026-09-25 18:53:53\nCashier:    Terminal 01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot                       \n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (12%) (10.00%):                 \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260925185400-101",
+        "timestamp": "2026-09-25 18:54:00",
+        "cashier": "Sync Verification Agent",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 145.0,
+                "qty": 1,
+                "modifiers": [
+                    {
+                        "name": "Extra Shot",
+                        "price": 25.0
+                    }
+                ],
+                "notes": "Sync Test",
+                "total": 145.0
+            }
+        ],
+        "subtotal": 145.0,
+        "tax_rate": 12.0,
+        "tax_amount": 17.4,
+        "total_due": 162.4,
+        "payment": 500.0,
+        "change": 337.6,
+        "receipt_text": "==========================================\n           METRO POINT OF SALE            \n         Terminal 01 - Manila BGC         \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260925185400-101\nDate/Time:  2026-09-25 18:54:00\nCashier:    Sync Verification Agent\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       1    \u20b1145.00 \u20b1145.00\n  + Extra Shot (+\u20b125.00)          \n  * Note: Sync Test                       \n------------------------------------------\nSubtotal:                          \u20b1145.00\nVAT (12%) (12.00%):                 \u20b117.40\nTotal Due:                         \u20b1162.40\nCash Tendered:                     \u20b1500.00\nChange Given:                      \u20b1337.60\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260925190752-101",
+        "timestamp": "2026-09-25 19:07:52",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260925190752-101\nDate/Time:  2026-09-25 19:07:52\nCashier:    Terminal 01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot                       \n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (10.00%):                       \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260925190755-101",
+        "timestamp": "2026-09-25 19:07:55",
+        "cashier": "Sync Verification Agent",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 145.0,
+                "qty": 1,
+                "modifiers": [
+                    {
+                        "name": "Extra Shot",
+                        "price": 25.0
+                    }
+                ],
+                "notes": "Sync Test",
+                "total": 145.0
+            }
+        ],
+        "subtotal": 145.0,
+        "tax_rate": 12.0,
+        "tax_amount": 17.4,
+        "total_due": 162.4,
+        "payment": 500.0,
+        "change": 337.6,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260925190755-101\nDate/Time:  2026-09-25 19:07:55\nCashier:    Sync Verification Agent\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       1    \u20b1145.00 \u20b1145.00\n  + Extra Shot (+\u20b125.00)          \n  * Note: Sync Test                       \n------------------------------------------\nSubtotal:                          \u20b1145.00\nVAT (12.00%):                       \u20b117.40\nTotal Due:                         \u20b1162.40\nCash Tendered:                     \u20b1500.00\nChange Given:                      \u20b1337.60\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260925191325-101",
+        "timestamp": "2026-09-25 19:13:25",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260925191325-101\nDate/Time:  2026-09-25 19:13:25\nCashier:    Terminal 01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot                       \n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (10.00%):                       \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260925191334-101",
+        "timestamp": "2026-09-25 19:13:34",
+        "cashier": "Sync Verification Agent",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 145.0,
+                "qty": 1,
+                "modifiers": [
+                    {
+                        "name": "Extra Shot",
+                        "price": 25.0
+                    }
+                ],
+                "notes": "Sync Test",
+                "total": 145.0
+            }
+        ],
+        "subtotal": 145.0,
+        "tax_rate": 12.0,
+        "tax_amount": 17.4,
+        "total_due": 162.4,
+        "payment": 500.0,
+        "change": 337.6,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260925191334-101\nDate/Time:  2026-09-25 19:13:34\nCashier:    Sync Verification Agent\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       1    \u20b1145.00 \u20b1145.00\n  + Extra Shot (+\u20b125.00)          \n  * Note: Sync Test                       \n------------------------------------------\nSubtotal:                          \u20b1145.00\nVAT (12.00%):                       \u20b117.40\nTotal Due:                         \u20b1162.40\nCash Tendered:                     \u20b1500.00\nChange Given:                      \u20b1337.60\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260925192257-101",
+        "timestamp": "2026-09-25 19:22:57",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260925192257-101\nDate/Time:  2026-09-25 19:22:57\nCashier:    Terminal 01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot                       \n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (10.00%):                       \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260925192305-101",
+        "timestamp": "2026-09-25 19:23:05",
+        "cashier": "Sync Verification Agent",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 145.0,
+                "qty": 1,
+                "modifiers": [
+                    {
+                        "name": "Extra Shot",
+                        "price": 25.0
+                    }
+                ],
+                "notes": "Sync Test",
+                "total": 145.0
+            }
+        ],
+        "subtotal": 145.0,
+        "tax_rate": 12.0,
+        "tax_amount": 17.4,
+        "total_due": 162.4,
+        "payment": 500.0,
+        "change": 337.6,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260925192305-101\nDate/Time:  2026-09-25 19:23:05\nCashier:    Sync Verification Agent\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       1    \u20b1145.00 \u20b1145.00\n  + Extra Shot (+\u20b125.00)          \n  * Note: Sync Test                       \n------------------------------------------\nSubtotal:                          \u20b1145.00\nVAT (12.00%):                       \u20b117.40\nTotal Due:                         \u20b1162.40\nCash Tendered:                     \u20b1500.00\nChange Given:                      \u20b1337.60\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260925193223-101",
+        "timestamp": "2026-09-25 19:32:23",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260925193223-101\nDate/Time:  2026-09-25 19:32:23\nCashier:    Terminal 01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot                       \n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (10.00%):                       \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20260925193228-101",
+        "timestamp": "2026-09-25 19:32:28",
+        "cashier": "Sync Verification Agent",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 145.0,
+                "qty": 1,
+                "modifiers": [
+                    {
+                        "name": "Extra Shot",
+                        "price": 25.0
+                    }
+                ],
+                "notes": "Sync Test",
+                "total": 145.0
+            }
+        ],
+        "subtotal": 145.0,
+        "tax_rate": 12.0,
+        "tax_amount": 17.4,
+        "total_due": 162.4,
+        "payment": 500.0,
+        "change": 337.6,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260925193228-101\nDate/Time:  2026-09-25 19:32:28\nCashier:    Sync Verification Agent\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       1    \u20b1145.00 \u20b1145.00\n  + Extra Shot (+\u20b125.00)          \n  * Note: Sync Test                       \n------------------------------------------\nSubtotal:                          \u20b1145.00\nVAT (12.00%):                       \u20b117.40\nTotal Due:                         \u20b1162.40\nCash Tendered:                     \u20b1500.00\nChange Given:                      \u20b1337.60\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    }
+]
