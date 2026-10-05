@@ -6,7 +6,7 @@
   <title>Point of Sale Terminal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/pos.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 </head>
@@ -16,15 +16,7 @@
   <header class="pos-header">
     <!-- Left: Store Brand & Station Telemetry -->
     <div class="pos-header-left brand-section">
-      <div class="brand-station-pod">
-        <div class="brand-station-badge" title="Point of Sale Station">
-          <svg class="brand-station-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="3" width="20" height="14" rx="2"></rect>
-            <line x1="8" y1="21" x2="16" y2="21"></line>
-            <line x1="12" y1="17" x2="12" y2="21"></line>
-            <path d="M7 8h10M7 11h6"></path>
-          </svg>
-        </div>
+      <div class="brand-station-pod" id="brandStationPod" title="Point of Sale Station">
         <div class="brand-station-meta">
           <div class="brand-store-name" id="headerStoreName">Keith's Market</div>
           <div class="brand-station-sub" id="headerBranch">Terminal 01 &bull; Active Shift</div>
@@ -357,12 +349,10 @@
       </div>
 
       <div class="modal-body">
-        <div class="barcode-visual-preview" id="barcodePreviewBox" style="position: relative; overflow: hidden; background: #0F172A; border-radius: var(--radius-md); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 180px;">
-          <div class="barcode-laser-line" id="barcodeLaserLine"></div>
+        <div class="barcode-visual-preview" id="barcodePreviewBox" style="position: relative; overflow: hidden; background: #0F172A; border-radius: var(--radius-md); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 240px;">
+          <video id="cameraScannerVideo" playsinline autoplay muted style="display: none; width: 100%; height: 240px; object-fit: contain; background: #000000; border-radius: var(--radius-md);"></video>
           
-          <video id="cameraScannerVideo" playsinline autoplay muted style="display: none; width: 100%; height: 180px; object-fit: cover; border-radius: var(--radius-md);"></video>
-          
-          <div id="cameraScannerReticle" style="display: none; position: absolute; border: 2px dashed #38BDF8; width: 70%; height: 60%; top: 20%; left: 15%; border-radius: 8px; pointer-events: none; box-shadow: 0 0 0 9999px rgba(0,0,0,0.35);"></div>
+          <div id="cameraScannerReticle" style="display: none; position: absolute; border: 2px solid #38BDF8; width: 80%; height: 68%; top: 16%; left: 10%; border-radius: 8px; pointer-events: none; box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.40);"></div>
 
           <div id="barcodeDefaultPlaceholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; z-index: 1; padding: 10px 14px;">
             <div class="interactive-barcode-target" id="interactiveBarcodeTarget" style="background: #FFFFFF; border-radius: 8px; padding: 12px 18px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 4px 16px rgba(0,0,0,0.35); width: 100%; max-width: 320px;">
@@ -391,19 +381,19 @@
           </button>
         </div>
 
+        <div class="form-group" style="margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" for="barcodeProductDropdown" style="margin-bottom: 0;">Select Any Product to Display Barcode:</label>
+            <span style="font-size: 11px; color: var(--text-secondary); font-family: var(--font-mono);" id="barcodeDropdownCount">30 items</span>
+          </div>
+          <select id="barcodeProductDropdown" class="form-input" style="font-size: 12.5px; padding: 8px 10px; cursor: pointer;">
+            <!-- Populated dynamically with all catalog products -->
+          </select>
+        </div>
+
         <div class="form-group">
           <label class="form-label" for="barcodeManualInput">Scan or Enter Barcode / SKU</label>
           <input type="text" id="barcodeManualInput" class="form-input" placeholder="e.g. 8901001 or 101" autofocus>
-        </div>
-
-        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">
-          <span style="font-weight: 600;">Select Sample to Display Scannable Barcode:</span>
-          <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
-            <button type="button" class="btn btn-secondary quick-barcode-btn" data-code="8901001" style="font-size: 11px; padding: 4px 10px;">8901001 (Espresso)</button>
-            <button type="button" class="btn btn-secondary quick-barcode-btn" data-code="8901002" style="font-size: 11px; padding: 4px 10px;">8901002 (Latte)</button>
-            <button type="button" class="btn btn-secondary quick-barcode-btn" data-code="8901013" style="font-size: 11px; padding: 4px 10px;">8901013 (Sourdough)</button>
-            <button type="button" class="btn btn-secondary quick-barcode-btn" data-code="8901016" style="font-size: 11px; padding: 4px 10px;">8901016 (Beef Tapa)</button>
-          </div>
         </div>
 
         <div class="phone-connect-hint" id="phoneConnectHint" style="margin-top: 14px; padding: 10px 12px; background: #F8FAFC; border: 1px dashed var(--border-subtle); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--text-secondary);">
@@ -418,10 +408,18 @@
         </div>
       </div>
 
-      <div class="modal-footer">
-        <button class="btn btn-primary" id="btnSubmitBarcode" style="width: 100%;">
+      <div class="modal-footer" style="display: flex; gap: 8px;">
+        <button class="btn btn-primary" id="btnSubmitBarcode" style="flex: 2;">
           Lookup & Add to Cart
         </button>
+        <a href="barcodes.html" target="_blank" class="btn btn-secondary" style="flex: 1; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 12px; gap: 6px;" title="Open all product barcodes in a separate page">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+          <span>Barcode Catalog ↗</span>
+        </a>
       </div>
     </div>
   </div>
@@ -547,6 +545,12 @@
               <strong id="dashboardActiveCashierName" style="color: var(--text-primary); font-family: var(--font-mono);">Maria Santos</strong>
             </div>
 
+            <a href="barcodes.html" target="_blank" class="btn btn-secondary" title="View and print full barcode catalog sheet" style="text-decoration: none; display: flex; align-items: center; gap: 6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 5v4m18-4v4M3 19v-4m18 4v-4M7 9v6m4-6v6m4-6v6"></path>
+              </svg>
+              <span>Barcode Sheet ↗</span>
+            </a>
             <button class="btn btn-secondary" id="btnExportCsv" title="Export catalog to CSV">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -1227,12 +1231,347 @@
     </button>
   </aside>
 
+  <!-- Defense & Code Cheat Sheet Modal (Secret F1 / Shift+? Modal) -->
+  <div class="modal-overlay" id="cheatSheetModal" style="z-index: 1700;">
+    <div class="modal-card" id="cheatSheetModalCard" style="max-width: 920px; width: 95%; max-height: 88vh; display: flex; flex-direction: column;">
+      
+      <!-- Cheat Sheet Header -->
+      <div class="modal-header" style="background: #0F172A; color: #FFFFFF; border-bottom: 1px solid #1E293B; padding: 18px 24px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: var(--radius-sm); padding: 7px; display: flex; align-items: center; justify-content: center; color: #38BDF8;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              <path d="M9 10h6M9 14h4"></path>
+            </svg>
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h2 style="font-size: 16px; font-weight: 700; color: #F8FAFC; margin: 0;">System Architecture & Engineering Reference</h2>
+              <span style="background: rgba(56, 189, 248, 0.2); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.4); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: var(--radius-full); text-transform: uppercase; letter-spacing: 0.05em;">Engineering Specs</span>
+            </div>
+            <span style="font-size: 12px; color: #94A3B8;">System design specifications, component data flow, API routing schemas, and verification guides</span>
+          </div>
+        </div>
+
+        <button class="modal-close-btn" id="btnCloseCheatSheet" aria-label="Close Reference" style="color: #94A3B8;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="cs-tab-bar" style="display: flex; gap: 4px; padding: 8px 16px; background: #1E293B; border-bottom: 1px solid #334155; overflow-x: auto;">
+        <button type="button" class="cs-tab-btn active" data-cstab="cs-tab-arch">System Architecture</button>
+        <button type="button" class="cs-tab-btn" data-cstab="cs-tab-cli">pos_system.py (CLI)</button>
+        <button type="button" class="cs-tab-btn" data-cstab="cs-tab-core">pos_core.py (Engine)</button>
+        <button type="button" class="cs-tab-btn" data-cstab="cs-tab-server">server.py (API Server)</button>
+        <button type="button" class="cs-tab-btn" data-cstab="cs-tab-qa">Verification & FAQ</button>
+        <button type="button" class="cs-tab-btn" data-cstab="cs-tab-debug">Diagnostics & Health</button>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="modal-body" style="padding: 20px 24px; overflow-y: auto; background: var(--bg-app); flex: 1;">
+        
+        <!-- PANE 1: System Architecture -->
+        <div class="cs-pane active" id="cs-tab-arch">
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 18px; margin-bottom: 16px;">
+            <h3 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">3-Tier Software Architecture</h3>
+            <pre style="background: #0F172A; color: #38BDF8; padding: 14px 16px; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 11.5px; line-height: 1.6; overflow-x: auto;">
+[ USER PRESENTATION LAYER ]
+  • Terminal CLI : pos_system.py  (Interactive text menu)
+  • Web Terminal : static/index.html & js/app.js  (Full graphical register)
+           │
+           │ HTTP REST API (Port 8000)
+           ▼
+[ APPLICATION & LOGIC LAYER ]
+  • Web Server   : server.py      (Zero-dependency ThreadingHTTPServer)
+  • Logic Engine : pos_core.py    (Stock check, 12% VAT math, receipt formatting)
+           │
+           │ Atomic JSON Persistence (_write_json via os.replace)
+           ▼
+[ LOCAL DATABASE LAYER ]
+  • products.json      • transactions.json      • settings.json      • receipt.txt</pre>
+          </div>
+
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 18px;">
+            <h3 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">End-to-End Sale Flow</h3>
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12.5px;">
+              <div style="display: flex; gap: 10px; align-items: baseline;"><strong style="font-family: var(--font-mono); color: #0284C7; min-width: 50px;">Step 1:</strong><span>User inputs item ID or scans barcode (e.g. <code>8901001</code>).</span></div>
+              <div style="display: flex; gap: 10px; align-items: baseline;"><strong style="font-family: var(--font-mono); color: #0284C7; min-width: 50px;">Step 2:</strong><span>System looks up item in <code>products.json</code> and validates stock count.</span></div>
+              <div style="display: flex; gap: 10px; align-items: baseline;"><strong style="font-family: var(--font-mono); color: #0284C7; min-width: 50px;">Step 3:</strong><span>Item is added to cart; cart checks that requested quantity does not exceed available stock.</span></div>
+              <div style="display: flex; gap: 10px; align-items: baseline;"><strong style="font-family: var(--font-mono); color: #0284C7; min-width: 50px;">Step 4:</strong><span>Cashier tenders payment; backend ensures <code>cash_received &gt;= total_due</code>.</span></div>
+              <div style="display: flex; gap: 10px; align-items: baseline;"><strong style="font-family: var(--font-mono); color: #0284C7; min-width: 50px;">Step 5:</strong><span><code>process_checkout()</code> runs under a thread lock: computes subtotal, 12% VAT, and change.</span></div>
+              <div style="display: flex; gap: 10px; align-items: baseline;"><strong style="font-family: var(--font-mono); color: #0284C7; min-width: 50px;">Step 6:</strong><span>Inventory is decremented in <code>products.json</code> and transaction is logged in <code>transactions.json</code>.</span></div>
+              <div style="display: flex; gap: 10px; align-items: baseline;"><strong style="font-family: var(--font-mono); color: #0284C7; min-width: 50px;">Step 7:</strong><span>42-character thermal receipt is generated and saved to <code>receipt.txt</code>.</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANE 2: pos_system.py Breakdown -->
+        <div class="cs-pane" id="cs-tab-cli" style="display: none;">
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px;">
+            <h3 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;">pos_system.py Function Guide</h3>
+            <table class="data-table" style="font-size: 12px;">
+              <thead>
+                <tr>
+                  <th style="width: 140px;">Function</th>
+                  <th style="width: 90px;">Lines</th>
+                  <th>How It Works</th>
+                  <th>Key Defense Note</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>prompt_int()</code></td>
+                  <td>L18–L32</td>
+                  <td>Repeatedly calls <code>input()</code> until user types a valid integer &ge; min_value.</td>
+                  <td>Centralized validation prevents crashes on invalid string input.</td>
+                </tr>
+                <tr>
+                  <td><code>prompt_float()</code></td>
+                  <td>L35–L47</td>
+                  <td>Validates float/decimal inputs for money amounts and prices.</td>
+                  <td>Catches non-numeric entries like letters or symbols.</td>
+                </tr>
+                <tr>
+                  <td><code>show_products()</code></td>
+                  <td>L50–L67</td>
+                  <td>Loads products and prints formatted ASCII catalog table.</td>
+                  <td>Uses Python format specifiers (<code>f"{item['id']:&lt;6}"</code>) for alignment.</td>
+                </tr>
+                <tr>
+                  <td><code>_build_cart()</code></td>
+                  <td>L70–L125</td>
+                  <td>Interactive loop: checks product existence, available stock, and merges cart items.</td>
+                  <td>Prevents overselling by tracking <code>available = stock - cart_qty</code>.</td>
+                </tr>
+                <tr>
+                  <td><code>_collect_payment()</code></td>
+                  <td>L128–L137</td>
+                  <td>Prompts for cash tendered until payment &ge; subtotal.</td>
+                  <td>Enforces requirement that sale cannot complete with insufficient cash.</td>
+                </tr>
+                <tr>
+                  <td><code>process_sale()</code></td>
+                  <td>L140–L167</td>
+                  <td>Glues sale together: loads products &rarr; builds cart &rarr; gets cash &rarr; calls <code>pos_core.process_checkout()</code>.</td>
+                  <td>CLI delegates checkout to <code>pos_core</code>; does not modify files itself.</td>
+                </tr>
+                <tr>
+                  <td><code>MENU_OPTIONS</code> &amp; <code>main()</code></td>
+                  <td>L262–L281</td>
+                  <td>Dictionary-based menu dispatch table.</td>
+                  <td>Replaces messy <code>if/elif</code> chain with clean key-to-function lookup.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PANE 3: pos_core.py Breakdown -->
+        <div class="cs-pane" id="cs-tab-core" style="display: none;">
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px;">
+            <h3 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;">pos_core.py Core Engine Guide</h3>
+            <table class="data-table" style="font-size: 12px;">
+              <thead>
+                <tr>
+                  <th style="width: 160px;">Function / Object</th>
+                  <th style="width: 85px;">Lines</th>
+                  <th>How It Works</th>
+                  <th>Key Defense Note</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>_read_json()</code></td>
+                  <td>L125–L133</td>
+                  <td>Reads file; catches missing files or <code>JSONDecodeError</code> and returns fallback.</td>
+                  <td>Prevents fatal server crashes if a JSON file is empty or missing.</td>
+                </tr>
+                <tr>
+                  <td><code>_write_json()</code></td>
+                  <td>L136–L141</td>
+                  <td>Writes data to <code>.tmp</code> first, then atomically swaps via <code>os.replace()</code>.</td>
+                  <td><strong>Atomic writes:</strong> guarantees file cannot be corrupted mid-write.</td>
+                </tr>
+                <tr>
+                  <td><code>_prepare_cart_items()</code></td>
+                  <td>L341–L382</td>
+                  <td>Validates requested IDs and quantities against real-time disk stock.</td>
+                  <td>Backend verification ensures client cannot tamper with prices or bypass stock.</td>
+                </tr>
+                <tr>
+                  <td><code>process_checkout()</code></td>
+                  <td>L385–L450</td>
+                  <td>Deducts stock, calculates 12% VAT, appends transaction record, and saves receipt.</td>
+                  <td>Guarded by <code>threading.Lock()</code> so concurrent requests don't conflict.</td>
+                </tr>
+                <tr>
+                  <td><code>format_thermal_receipt()</code></td>
+                  <td>L456–L510</td>
+                  <td>Builds 42-column monospace receipt with headers, items, modifiers, tax, and change.</td>
+                  <td>Formatted strictly for physical 80mm ESC/POS thermal printers.</td>
+                </tr>
+                <tr>
+                  <td><code>get_analytics()</code></td>
+                  <td>L513–L531</td>
+                  <td>Calculates total sales revenue, completed transactions, ticket size, and low stock (&le;10).</td>
+                  <td>Dynamically computed from disk files on every request.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PANE 4: server.py Breakdown -->
+        <div class="cs-pane" id="cs-tab-server" style="display: none;">
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px;">
+            <h3 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;">server.py Web &amp; REST API Guide</h3>
+            <table class="data-table" style="font-size: 12px;">
+              <thead>
+                <tr>
+                  <th style="width: 150px;">Endpoint / Method</th>
+                  <th style="width: 75px;">HTTP</th>
+                  <th>Purpose</th>
+                  <th>Code Executed</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>/</code> or <code>/index.html</code></td>
+                  <td>GET</td>
+                  <td>Serves the main Cashier &amp; Management web application.</td>
+                  <td><code>super().do_GET()</code> from <code>static/</code> directory.</td>
+                </tr>
+                <tr>
+                  <td><code>/api/products</code></td>
+                  <td>GET</td>
+                  <td>Returns product catalog with search and category filtering.</td>
+                  <td><code>pos_core.load_products()</code> filtered by query params.</td>
+                </tr>
+                <tr>
+                  <td><code>/api/products</code></td>
+                  <td>POST</td>
+                  <td>Adds a new product to inventory.</td>
+                  <td>Calls <code>pos_core.add_product()</code>.</td>
+                </tr>
+                <tr>
+                  <td><code>/api/checkout</code></td>
+                  <td>POST</td>
+                  <td>Processes a sale transaction submitted from web cart.</td>
+                  <td>Calls <code>pos_core.process_checkout(items, cash)</code>.</td>
+                </tr>
+                <tr>
+                  <td><code>/api/sync</code></td>
+                  <td>GET</td>
+                  <td>Returns file modification timestamps, counts, and Wi-Fi IP.</td>
+                  <td>Gathers <code>os.stat()</code> on JSON files for live synchronization.</td>
+                </tr>
+                <tr>
+                  <td><code>/api/stats</code></td>
+                  <td>GET</td>
+                  <td>Returns sales totals, SKU counts, and stock warnings.</td>
+                  <td>Calls <code>pos_core.get_analytics()</code>.</td>
+                </tr>
+                <tr>
+                  <td><code>ThreadingHTTPServer</code></td>
+                  <td>--</td>
+                  <td>Spawns a new thread for each incoming connection.</td>
+                  <td>Allows multiple cashiers, phone scanners, and CLI to work simultaneously.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PANE 5: Defense Q&A -->
+        <div class="cs-pane" id="cs-tab-qa" style="display: none;">
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px;">
+              <h4 style="font-size: 13.5px; font-weight: 700; color: #0284C7; margin-bottom: 6px;">Q1: How do you prevent negative inventory when multiple items are purchased?</h4>
+              <p style="font-size: 12.5px; color: var(--text-primary); line-height: 1.5; margin: 0;">
+                <strong>Answer:</strong> Stock is validated in two stages. First, the UI checks <code>available = stock - current_cart_qty</code>. Second, when checkout is submitted, <code>_prepare_cart_items()</code> inside <code>pos_core.py</code> inspects the fresh inventory on disk under a <code>threading.Lock</code>. If any requested quantity exceeds remaining stock, a <code>ValueError</code> is raised and the transaction is aborted before any stock is deducted.
+              </p>
+            </div>
+
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px;">
+              <h4 style="font-size: 13.5px; font-weight: 700; color: #0284C7; margin-bottom: 6px;">Q2: How do you protect JSON files from being corrupted if the app is closed mid-save?</h4>
+              <p style="font-size: 12.5px; color: var(--text-primary); line-height: 1.5; margin: 0;">
+                <strong>Answer:</strong> We implement <em>atomic file writes</em> in <code>_write_json()</code>. The data is first written and flushed to a temporary file (e.g. <code>products.json.tmp</code>). Once write succeeds, <code>os.replace()</code> instantly swaps the temp file with the target file. Since <code>os.replace</code> is atomic at the OS level, there is never a corrupted or half-written file.
+              </p>
+            </div>
+
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px;">
+              <h4 style="font-size: 13.5px; font-weight: 700; color: #0284C7; margin-bottom: 6px;">Q3: How is the 12% Philippine VAT calculated?</h4>
+              <p style="font-size: 12.5px; color: var(--text-primary); line-height: 1.5; margin: 0;">
+                <strong>Answer:</strong> In <code>pos_core.process_checkout()</code>, if <code>tax_enabled</code> is <code>True</code>, we calculate:
+                <br><code>tax_amount = round(subtotal * (tax_rate / 100), 2)</code>
+                <br><code>total_due = round(subtotal + tax_amount, 2)</code>
+                <br><code>change = round(payment - total_due, 2)</code>
+                <br>Tax settings can also be toggled or updated dynamically via the Management Suite or <code>settings.json</code>.
+              </p>
+            </div>
+
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px;">
+              <h4 style="font-size: 13.5px; font-weight: 700; color: #0284C7; margin-bottom: 6px;">Q4: How do the CLI Terminal and Web Terminal stay in sync?</h4>
+              <p style="font-size: 12.5px; color: var(--text-primary); line-height: 1.5; margin: 0;">
+                <strong>Answer:</strong> Both <code>pos_system.py</code> and <code>server.py</code> share the identical backend library <code>pos_core.py</code>, which points to the same JSON files on disk. The web app has a 4-second auto-sync poll (<code>/api/sync</code>) that checks file modification timestamps (<code>mtime</code>) and automatically refreshes whenever disk changes are detected.
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- PANE 6: Live Debugging -->
+        <div class="cs-pane" id="cs-tab-debug" style="display: none;">
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px;">
+              <h4 style="font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Run Tests from Command Line</h4>
+              <pre style="background: #0F172A; color: #10B981; padding: 10px 14px; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 12px; margin-bottom: 6px;">python -m unittest test_pos.py</pre>
+              <span style="font-size: 11.5px; color: var(--text-secondary);">Tests product loading, barcode lookup, CRUD operations, tax calculation, and checkout.</span>
+            </div>
+
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px;">
+              <h4 style="font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">How to Reset Data Files to Factory Defaults</h4>
+              <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">If test data is messed up, delete the files or run this one-liner in Python:</p>
+              <pre style="background: #0F172A; color: #F59E0B; padding: 10px 14px; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 12px; margin-bottom: 6px;">import os; [os.remove(f) for f in ['products.json', 'settings.json'] if os.path.exists(f)]</pre>
+              <span style="font-size: 11.5px; color: var(--text-secondary);">Next time <code>pos_core</code> is called, it automatically recreates clean seed products and settings.</span>
+            </div>
+
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px;">
+              <h4 style="font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Inspect Current State from Python Terminal</h4>
+              <pre style="background: #0F172A; color: #38BDF8; padding: 10px 14px; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 12px; margin-bottom: 6px;">import pos_core; print(pos_core.get_analytics())</pre>
+              <span style="font-size: 11.5px; color: var(--text-secondary);">Instantly dumps total revenue, transaction counts, and inventory health metrics.</span>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer" style="padding: 12px 24px; background: #FFFFFF; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 12px; color: var(--text-secondary);">
+          <kbd class="terminal-header-kbd">F1</kbd> or <kbd class="terminal-header-kbd">Shift + ?</kbd> to toggle &bull; <kbd class="terminal-header-kbd">Esc</kbd> to close
+        </span>
+        <button type="button" class="btn btn-secondary" id="btnDismissCheatSheet" style="padding: 6px 16px; font-size: 12px;">Close</button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
   <!-- Application Logic -->
   <script src="js/JsBarcode.all.min.js"></script>
   <script src="js/qrcode.min.js"></script>
+  <script src="js/zxing.min.js"></script>
   <script src="js/api.js"></script>
   <script src="js/app.js"></script>
 </body>

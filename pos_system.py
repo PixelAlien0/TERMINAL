@@ -10,126 +10,221 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
 STORE_DETAILS = ("Python Point of Sale", "Student Mini-Store")
-FILE_NAME = "products.json"
 
 
-def show_products(products):
+# -------------------------------------------------------------
+# CLI Input Helpers
+# -------------------------------------------------------------
+def prompt_int(message, min_value=0, allow_blank=False, default=None):
+    """Prompt user for a valid integer, repeating until valid input is given."""
+    while True:
+        raw = input(message).strip()
+        if allow_blank and raw == "":
+            return default
+        try:
+            val = int(raw)
+            if min_value is not None and val < min_value:
+                print(f"Value must be at least {min_value}.")
+                continue
+            return val
+        except ValueError:
+            print("Please enter a valid whole number.")
+
+
+def prompt_float(message, min_value=0.0):
+    """Prompt user for a valid decimal/float number."""
+    while True:
+        raw = input(message).strip()
+        try:
+            val = float(raw)
+            if min_value is not None and val < min_value:
+                print(f"Value must be at least {min_value:.2f}.")
+                continue
+            return val
+        except ValueError:
+            print("Please enter a valid amount (e.g., 50.00).")
+
+
+# -------------------------------------------------------------
+# Product Catalog Display
+# -------------------------------------------------------------
+def show_products(products=None):
+    """Display product catalog in a formatted table."""
+    if products is None:
+        products = pos_core.load_products()
+
     settings = pos_core.load_settings()
     curr = settings.get("currency_symbol", "₱")
-    print("\n-------------------------------------------")
-    print(f"      {STORE_DETAILS[0]} - {STORE_DETAILS[1]}")
-    print("-------------------------------------------")
-    print("ID   Product Name          Price     Stock")
-    print("-------------------------------------------")
+
+    print("\n" + "=" * 45)
+    print(f"  {STORE_DETAILS[0]} - {STORE_DETAILS[1]}".center(45))
+    print("=" * 45)
+    print(f"{'ID':<6}{'Product Name':<22}{'Price':<10}{'Stock'}")
+    print("-" * 45)
     for item in products:
-        item_id = item["id"]
-        name = item["name"]
-        price = item["price"]
-        stock = item["stock"]
-        print(f"{item_id:<5}{name:<22}{curr}{price:<8.2f}{stock}")
-    print("-------------------------------------------")
+        price_str = f"{curr}{item['price']:.2f}"
+        print(f"{item['id']:<6}{item['name']:<22}{price_str:<10}{item['stock']}")
+    print("=" * 45)
 
 
-def process_sale(products):
-    show_products(products)
+# -------------------------------------------------------------
+# Sales Flow: Cart, Payment, Checkout
+# -------------------------------------------------------------
+def _build_cart(products, curr):
+    """Interactively collect products and quantities for a new sale."""
     cart = []
+    product_map = {p["id"]: p for p in products}
 
     while True:
-        choice = input("\nEnter Product ID to buy (or 'done' to checkout, 'cancel' to exit): ").strip()
+        entry = input("\nEnter Product ID to buy (or 'done' / 'cancel'): ").strip().lower()
 
-        if choice.lower() == "cancel":
+        if entry == "cancel":
             print("Transaction cancelled.")
-            return
+            return None
 
-        if choice.lower() == "done":
+        if entry == "done":
             break
 
-        if not choice.isdigit():
-            print("Please enter a valid numeric ID.")
+        if not entry.isdigit():
+            print("Please enter a valid numeric Product ID.")
             continue
 
-        product_id = int(choice)
-        selected_product = next((item for item in products if item["id"] == product_id), None)
+        product_id = int(entry)
+        product = product_map.get(product_id)
 
-        if selected_product is None:
-            print("Product ID not found!")
+        if not product:
+            print("Product ID not found.")
             continue
 
-        if selected_product["stock"] <= 0:
-            print(f"Sorry, {selected_product['name']} is out of stock.")
+        if product["stock"] <= 0:
+            print(f"Sorry, {product['name']} is currently out of stock.")
             continue
 
-        qty_input = input(f"Enter quantity for {selected_product['name']} (Available: {selected_product['stock']}): ").strip()
-        if not qty_input.isdigit() or int(qty_input) <= 0:
-            print("Quantity must be a positive whole number.")
+        # Check how many are already in the cart
+        already_in_cart = next((c for c in cart if c["id"] == product_id), None)
+        current_cart_qty = already_in_cart["qty"] if already_in_cart else 0
+        available = product["stock"] - current_cart_qty
+
+        if available <= 0:
+            print(f"All {product['stock']} units of {product['name']} are already in your cart.")
             continue
 
-        qty = int(qty_input)
-
-        if qty > selected_product["stock"]:
-            print(f"Not enough stock! Only {selected_product['stock']} available.")
+        qty = prompt_int(f"Enter quantity for {product['name']} (Available: {available}): ", min_value=1)
+        if qty > available:
+            print(f"Cannot add {qty}. Only {available} more units available.")
             continue
 
-        # Check if item is already in cart
-        found_in_cart = False
-        for cart_item in cart:
-            if cart_item["id"] == product_id:
-                if cart_item["qty"] + qty > selected_product["stock"]:
-                    print("Cannot add more. Exceeds available stock.")
-                    found_in_cart = True
-                    break
-                cart_item["qty"] += qty
-                cart_item["total"] = cart_item["qty"] * cart_item["price"]
-                found_in_cart = True
-                print(f"Updated {selected_product['name']} quantity in cart to {cart_item['qty']}.")
-                break
-
-        if not found_in_cart:
+        if already_in_cart:
+            already_in_cart["qty"] += qty
+            already_in_cart["total"] = already_in_cart["qty"] * already_in_cart["price"]
+            print(f"Updated {product['name']} quantity in cart to {already_in_cart['qty']}.")
+        else:
             cart.append({
-                "id": selected_product["id"],
-                "name": selected_product["name"],
-                "price": selected_product["price"],
+                "id": product["id"],
+                "name": product["name"],
+                "price": product["price"],
                 "qty": qty,
-                "total": qty * selected_product["price"]
+                "total": qty * product["price"]
             })
-            print(f"Added {qty} x {selected_product['name']} to cart.")
+            print(f"Added {qty} x {product['name']} to cart.")
 
-    if len(cart) == 0:
-        print("No items purchased.")
-        return
+    return cart
 
+
+def _collect_payment(subtotal, curr):
+    """Prompt cashier for payment until cash covers total."""
+    print(f"\nSubtotal Amount: {curr}{subtotal:.2f}")
+    while True:
+        payment = prompt_float(f"Enter cash received ({curr}): ", min_value=0.0)
+        if payment < subtotal:
+            print(f"Insufficient cash! Need at least {curr}{subtotal:.2f}.")
+            continue
+        return payment
+
+
+def process_sale(products=None):
+    """Guide the cashier through product selection, cash payment, and receipt generation."""
+    if products is None:
+        products = pos_core.load_products()
+
+    show_products(products)
     settings = pos_core.load_settings()
     curr = settings.get("currency_symbol", "₱")
+
+    cart = _build_cart(products, curr)
+    if not cart:
+        if cart is not None:
+            print("No items added to cart.")
+        return
+
     subtotal = sum(item["total"] for item in cart)
-    print(f"\nTotal Amount Due: {curr}{subtotal:.2f}")
+    payment = _collect_payment(subtotal, curr)
 
-    payment = 0.0
-    while True:
-        pay_input = input(f"Enter cash received ({curr}): ").strip()
-        try:
-            payment = float(pay_input)
-            if payment < subtotal:
-                print(f"Insufficient money! You need at least {curr}{subtotal:.2f}")
-            else:
-                break
-        except ValueError:
-            print("Please enter a valid amount of money (e.g., 100.00).")
+    cashier = input("Enter Cashier Name (press Enter for 'Terminal Console'): ").strip()
+    if not cashier:
+        cashier = "Terminal Console"
 
-    cashier_name = input("Enter Cashier Name (press Enter for 'Terminal Console'): ").strip()
-    if not cashier_name:
-        cashier_name = "Terminal Console"
-
-    # Delegate checkout through unified pos_core
     try:
         cart_payload = [{"id": item["id"], "qty": item["qty"]} for item in cart]
-        tx = pos_core.process_checkout(cart_payload, payment, cashier=cashier_name)
+        tx = pos_core.process_checkout(cart_payload, payment, cashier=cashier)
         print("\n" + tx["receipt_text"])
-        print("\n[Receipt printed and recorded to database & 'receipt.txt']")
-    except ValueError as e:
-        print(f"Transaction failed: {e}")
+        print("\n[Receipt printed and saved to 'receipt.txt']")
+    except ValueError as err:
+        print(f"Checkout failed: {err}")
+
+
+# -------------------------------------------------------------
+# Management Operations: Add, Update, Reports
+# -------------------------------------------------------------
+def add_product_cli():
+    """Prompt user to add a new product to the catalog."""
+    settings = pos_core.load_settings()
+    curr = settings.get("currency_symbol", "₱")
+
+    print("\n--- Add New Product ---")
+    name = input("Enter product name: ").strip()
+    if not name:
+        print("Product name cannot be empty.")
+        return
+
+    category = input("Enter category (Beverages, Bakery, Rice Meals, etc.): ").strip()
+    price = prompt_float(f"Enter unit price ({curr}): ", min_value=0.0)
+    stock = prompt_int("Enter initial stock: ", min_value=0)
+
+    try:
+        new_item = pos_core.add_product(name, price, stock, category=category)
+        print(f"Success! '{new_item['name']}' added with ID {new_item['id']} and barcode {new_item['barcode']}.")
+    except ValueError as err:
+        print(f"Failed to add product: {err}")
+
+
+def update_stock_cli(products=None):
+    """Update stock quantity for an existing product."""
+    if products is None:
+        products = pos_core.load_products()
+
+    show_products(products)
+    product_map = {p["id"]: p for p in products}
+
+    product_id = prompt_int("\nEnter Product ID to update stock: ")
+    selected = product_map.get(product_id)
+
+    if not selected:
+        print(f"Product ID {product_id} not found.")
+        return
+
+    print(f"Selected: {selected['name']} (Current Stock: {selected['stock']})")
+    new_stock = prompt_int("Enter new stock count: ", min_value=0)
+
+    try:
+        pos_core.update_product(product_id, {"stock": new_stock})
+        print(f"Stock successfully updated to {new_stock} for {selected['name']}.")
+    except ValueError as err:
+        print(f"Update failed: {err}")
 
 
 def view_sales_report_cli():
+    """Display store analytics and recent sales transactions."""
     analytics = pos_core.get_analytics()
     transactions = pos_core.load_transactions()
     settings = pos_core.load_settings()
@@ -146,8 +241,9 @@ def view_sales_report_cli():
     print(f" Out of Stock SKUs:       {analytics['out_of_stock_count']}")
     print("------------------------------------------")
     print("Recent Transactions (Last 5):")
-    print("ID                   Date/Time            Cashier       Total")
-    print("---------------------------------------------------------------")
+    print(f"{'ID':<21}{'Date/Time':<21}{'Cashier':<14}{'Total'}")
+    print("-" * 65)
+
     if not transactions:
         print("  No transactions recorded yet.")
     else:
@@ -160,56 +256,8 @@ def view_sales_report_cli():
     print("==========================================")
 
 
-def add_product_cli():
-    settings = pos_core.load_settings()
-    curr = settings.get("currency_symbol", "₱")
-    print("\n--- Add New Product ---")
-    name = input("Enter product name: ").strip()
-    if not name:
-        print("Product name cannot be empty.")
-        return
-
-    category = input("Enter category (Beverages, Bakery, Fresh, etc.): ").strip()
-
-    try:
-        price = float(input(f"Enter unit price ({curr}): ").strip())
-        stock = int(input("Enter initial stock: ").strip())
-        new_item = pos_core.add_product(name, price, stock, category)
-        print(f"Success! '{new_item['name']}' added with ID {new_item['id']}.")
-    except ValueError as e:
-        print(f"Invalid input: {e}")
-
-
-def update_stock_cli(products):
-    show_products(products)
-    choice = input("\nEnter Product ID to update stock: ").strip()
-
-    if not choice.isdigit():
-        print("Invalid ID.")
-        return
-
-    product_id = int(choice)
-    selected_product = next((item for item in products if item["id"] == product_id), None)
-
-    if selected_product is None:
-        print("Product not found.")
-        return
-
-    print(f"Selected: {selected_product['name']} (Current Stock: {selected_product['stock']})")
-    stock_input = input("Enter new stock count: ").strip()
-
-    if not stock_input.isdigit():
-        print("Stock must be a positive whole number.")
-        return
-
-    try:
-        pos_core.update_product(product_id, {"stock": int(stock_input)})
-        print(f"Stock updated successfully for {selected_product['name']}.")
-    except ValueError as e:
-        print(f"Update failed: {e}")
-
-
 def launch_web_server():
+    """Open the browser and run the built-in HTTP server."""
     print("\n==========================================")
     print("  LAUNCHING WEB-BASED POS TERMINAL")
     print("==========================================")
@@ -223,40 +271,40 @@ def launch_web_server():
     server.run_server(8000)
 
 
+# -------------------------------------------------------------
+# Main Menu
+# -------------------------------------------------------------
+MENU_OPTIONS = {
+    "1": ("Process New Sale", process_sale),
+    "2": ("View Available Products", show_products),
+    "3": ("Add New Product", add_product_cli),
+    "4": ("Update Product Stock", update_stock_cli),
+    "5": ("View Sales Report & KPIs", view_sales_report_cli),
+    "6": ("Launch Modern Web POS Terminal", launch_web_server),
+    "7": ("Exit", None),
+}
+
+
 def main():
     while True:
-        products = pos_core.load_products()
         print("\n==========================================")
         print("       POINT OF SALE (POS) SYSTEM")
         print("==========================================")
-        print(" [1] Process New Sale")
-        print(" [2] View Available Products")
-        print(" [3] Add New Product")
-        print(" [4] Update Product Stock")
-        print(" [5] View Sales Report & KPIs")
-        print(" [6] Launch Modern Web POS Terminal")
-        print(" [7] Exit")
+        for key, (label, _) in MENU_OPTIONS.items():
+            print(f" [{key}] {label}")
         print("==========================================")
 
         choice = input("Enter your choice (1-7): ").strip()
+        if choice not in MENU_OPTIONS:
+            print("Invalid selection! Please enter a number between 1 and 7.")
+            continue
 
-        if choice == "1":
-            process_sale(products)
-        elif choice == "2":
-            show_products(products)
-        elif choice == "3":
-            add_product_cli()
-        elif choice == "4":
-            update_stock_cli(products)
-        elif choice == "5":
-            view_sales_report_cli()
-        elif choice == "6":
-            launch_web_server()
-        elif choice == "7":
+        label, action = MENU_OPTIONS[choice]
+        if action is None:
             print("Thank you for using the POS System. Goodbye!")
             break
-        else:
-            print("Invalid selection! Please enter a number between 1 and 7.")
+
+        action()
 
 
 if __name__ == "__main__":

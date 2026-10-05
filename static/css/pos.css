@@ -32,9 +32,9 @@
   --accent-indigo: #4F46E5;
   --accent-indigo-light: #EEF2FF;
 
-  /* Typography - Free Faces Gallery: Space Grotesk (Sans) & Martian Mono (Monospace) */
-  --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'Martian Mono', 'SF Mono', 'Courier New', Courier, monospace;
+  /* Typography - Modern Commercial Fonts: Inter & JetBrains Mono with native ₱ (PHP) support */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Segoe UI Mono', 'SF Mono', 'Roboto Mono', monospace;
 
   /* Shadows (Material elevation) */
   --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.06);
@@ -73,6 +73,7 @@ body {
 
 .tabular-num {
   font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
 }
 
 /* -------------------------------------------------------------
@@ -110,26 +111,11 @@ body {
   flex-shrink: 0;
 }
 
-/* Brand & Station Identity Pod */
+/* Brand & Station Identity Pod (Pure Text Branding) */
 .brand-station-pod {
   display: flex;
   align-items: center;
-  gap: 12px;
   user-select: none;
-}
-
-.brand-station-badge {
-  width: 38px;
-  height: 38px;
-  background: #0F172A;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #38BDF8;
-  border: 1px solid #1E293B;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
-  flex-shrink: 0;
 }
 
 .brand-station-meta {
@@ -139,15 +125,15 @@ body {
 }
 
 .brand-store-name {
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
   color: var(--text-primary);
   line-height: 1.2;
 }
 
 .brand-station-sub {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 600;
   color: var(--text-secondary);
   letter-spacing: 0.04em;
@@ -1015,15 +1001,6 @@ body {
    Zero Emojis. Zero gooey AI pills. Crisp monospace pips & hairlines.
    ============================================================= */
 
-@keyframes badgeTick {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.35;
-  }
-}
-
 .badge {
   display: inline-flex;
   align-items: center;
@@ -1043,7 +1020,6 @@ body {
 }
 
 .badge-pill {
-  /* Architectural micro-stamp tag replacing generic AI jelly lozenges */
   border-radius: 3px;
   padding: 3px 8px;
 }
@@ -1071,11 +1047,6 @@ body {
   height: 5px;
   border-radius: 1px;
   flex-shrink: 0;
-}
-
-.badge-dot.pulse,
-.badge-dot.pulse-amber {
-  animation: badgeTick 1.8s ease-in-out infinite;
 }
 
 /* Badge Semantic Variants - High-Contrast Micro-Ticket Stamps */
@@ -1201,7 +1172,6 @@ body {
 }
 .stock-tag.low-stock .badge-dot {
   background: #D97706;
-  animation: badgeTick 1.6s ease-in-out infinite;
 }
 
 .stock-tag.sold-out {
@@ -2114,23 +2084,6 @@ body {
   overflow: hidden;
 }
 
-.barcode-laser-line {
-  position: absolute;
-  top: 0;
-  left: 10%;
-  width: 80%;
-  height: 2px;
-  background: var(--accent-rose);
-  box-shadow: 0 0 8px var(--accent-rose);
-  animation: laserSweep 2s infinite ease-in-out;
-}
-
-@keyframes laserSweep {
-  0% { top: 15%; opacity: 0.3; }
-  50% { top: 85%; opacity: 1; }
-  100% { top: 15%; opacity: 0.3; }
-}
-
 /* -------------------------------------------------------------
    Modals & Drawers
 ---------------------------------------------------------------- */
@@ -2158,6 +2111,35 @@ body {
 
 #receiptModal {
   z-index: 1580;
+}
+
+#cheatSheetModal {
+  z-index: 1700;
+  padding: 16px;
+}
+
+.cs-tab-btn {
+  background: transparent;
+  border: none;
+  color: #94A3B8;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.cs-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #F8FAFC;
+}
+
+.cs-tab-btn.active {
+  background: #0284C7;
+  color: #FFFFFF;
 }
 
 .modal-overlay.active {

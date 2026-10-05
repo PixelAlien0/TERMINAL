@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Barcode Catalog & Test Sheet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-page: #F8FAFC;
+      --bg-surface: #FFFFFF;
+      --border: #E2E8F0;
+      --border-strong: #CBD5E1;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --primary: #0F172A;
+      --accent-blue: #0284C7;
+      --accent-green: #16A34A;
+      --radius: 10px;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      line-height: 1.5;
+      padding-bottom: 60px;
+    }
+
+    /* Header & Navigation */
+    .top-header {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 14px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--bg-page);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      text-decoration: none;
+      font-size: 12.5px;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+
+    .back-btn:hover {
+      background: #E2E8F0;
+    }
+
+    .header-titles h1 {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .header-titles p {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: #0F172A;
+      color: #FFFFFF;
+    }
+    .btn-primary:hover {
+      background: #1E293B;
+    }
+
+    .btn-secondary {
+      background: #FFFFFF;
+      border-color: var(--border);
+      color: var(--text-primary);
+    }
+    .btn-secondary:hover {
+      background: #F1F5F9;
+    }
+
+    /* Toolbar: Search & Category Filter */
+    .catalog-toolbar {
+      max-width: 1340px;
+      margin: 20px auto 0;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .toolbar-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      flex: 1;
+      max-width: 440px;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 40px;
+      padding: 0 14px 0 38px;
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .category-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .category-pill {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+    }
+
+    .category-pill:hover {
+      background: #F1F5F9;
+      color: var(--text-primary);
+    }
+
+    .category-pill.active {
+      background: #0F172A;
+      border-color: #0F172A;
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+
+    .size-toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* Barcode Grid */
+    .barcode-grid {
+      max-width: 1340px;
+      margin: 20px auto 0;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 18px;
+    }
+
+    /* Individual Barcode Card */
+    .barcode-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .barcode-card:hover {
+      border-color: var(--border-strong);
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .card-top {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      padding-right: 8px;
+    }
+
+    .card-price {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--accent-blue);
+      font-family: var(--font-mono);
+      white-space: nowrap;
+    }
+
+    .card-meta {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .card-category {
+      background: var(--bg-page);
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .card-stock {
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .card-stock.in-stock {
+      color: var(--accent-green);
+    }
+
+    .card-stock.low-stock {
+      color: #D97706;
+      font-weight: 600;
+    }
+
+    /* Barcode SVG Container */
+    .barcode-svg-wrap {
+      background: #FFFFFF;
+      padding: 10px 4px 6px;
+      border-radius: 6px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 80px;
+    }
+
+    .barcode-svg-wrap svg {
+      max-width: 100%;
+      height: 64px;
+    }
+
+    /* Large Barcode Zoom Mode */
+    body.zoom-large .barcode-svg-wrap svg {
+      height: 90px;
+    }
+    body.zoom-large .barcode-grid {
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    }
+
+    .card-actions {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      font-size: 11.5px;
+    }
+
+    .sku-code {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+      user-select: all;
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: none;
+      color: var(--accent-blue);
+      cursor: pointer;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+
+    .copy-btn:hover {
+      background: #F0F9FF;
+    }
+
+    /* Print Styles (Letter / A4 Sheet) */
+    @media print {
+      body {
+        background: #FFFFFF;
+        padding: 0;
+      }
+      .top-header,
+      .catalog-toolbar,
+      .card-actions,
+      .no-print {
+        display: none !important;
+      }
+      .barcode-grid {
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+      .barcode-card {
+        border: 1px solid #94A3B8;
+        box-shadow: none;
+        page-break-inside: avoid;
+        padding: 12px 14px;
+      }
+      .barcode-svg-wrap svg {
+        height: 54px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Sticky Navigation -->
+  <header class="top-header no-print">
+    <div class="header-left">
+      <a href="index.html" class="back-btn" title="Return to Point of Sale Terminal">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        <span>POS Terminal</span>
+      </a>
+      <div class="header-titles">
+        <h1>Product Barcode Test Catalog</h1>
+        <p>Scannable retail Code-128 barcodes for camera testing, laser scanners, and defense demos</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="size-toggle-wrap">
+        <span>Barcode Scale:</span>
+        <button type="button" class="btn btn-secondary" id="btnToggleZoom" style="padding: 5px 12px; font-size: 12px;">
+          Normal Scale
+        </button>
+      </div>
+
+      <button type="button" class="btn btn-primary" onclick="window.print()" title="Print physical sticker sheet or save as PDF">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 6 2 18 2 18 9"></polyline>
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+          <rect x="6" y="14" width="12" height="8"></rect>
+        </svg>
+        <span>Print Barcode Sheet</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Filter & Search Toolbar -->
+  <div class="catalog-toolbar no-print">
+    <div class="toolbar-row">
+      <div class="search-box">
+        <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search by product name, category, or barcode SKU...">
+      </div>
+
+      <div style="font-size: 12px; color: var(--text-secondary);">
+        Showing <strong id="productCount" style="color: var(--text-primary);">0</strong> items
+      </div>
+    </div>
+
+    <div class="category-pills" id="categoryPills">
+      <button type="button" class="category-pill active" data-category="all">All Items</button>
+    </div>
+  </div>
+
+  <!-- Main Barcode Cards Grid -->
+  <main class="barcode-grid" id="barcodeGrid">
+    <!-- Populated dynamically with JavaScript -->
+  </main>
+
+  <!-- JsBarcode Library -->
+  <script src="js/JsBarcode.all.min.js"></script>
+
+  <script>
+    let allProducts = [];
+    let selectedCategory = 'all';
+
+    async function loadProducts() {
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        allProducts = data.products || [];
+        setupCategoryPills();
+        renderGrid();
+      } catch (err) {
+        document.getElementById('barcodeGrid').innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-secondary);">
+            <p style="font-size: 15px; font-weight: 600; color: #DC2626;">Failed to load products from server.</p>
+            <p style="font-size: 12px; margin-top: 6px;">Ensure <code>server.py</code> is running on port 8000.</p>
+          </div>
+        `;
+      }
+    }
+
+    function setupCategoryPills() {
+      const container = document.getElementById('categoryPills');
+      const categories = ['all', ...new Set(allProducts.map(p => p.category || 'General').filter(Boolean))];
+      
+      container.innerHTML = categories.map(cat => `
+        <button type="button" class="category-pill ${cat === selectedCategory ? 'active' : ''}" data-category="${cat}">
+          ${cat === 'all' ? 'All Items' : cat}
+        </button>
+      `).join('');
+
+      container.querySelectorAll('.category-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+          container.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          selectedCategory = pill.dataset.category;
+          renderGrid();
+        });
+      });
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('barcodeGrid');
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+
+      const filtered = allProducts.filter(item => {
+        const matchesCategory = selectedCategory === 'all' || (item.category || 'General').toLowerCase() === selectedCategory.toLowerCase();
+        const matchesQuery = !query || 
+          item.name.toLowerCase().includes(query) ||
+          String(item.barcode || '').toLowerCase().includes(query) ||
+          String(item.id).includes(query) ||
+          (item.category || '').toLowerCase().includes(query);
+        return matchesCategory && matchesQuery;
+      });
+
+      document.getElementById('productCount').textContent = filtered.length;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-secondary);">
+            <p style="font-size: 14px; font-weight: 600;">No products match your search.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(item => {
+        const barcodeCode = String(item.barcode || item.id);
+        const isLow = item.stock <= 10;
+        const stockClass = isLow ? 'low-stock' : 'in-stock';
+        const stockText = isLow ? `Low Stock (${item.stock})` : `${item.stock} in stock`;
+
+        return `
+          <div class="barcode-card" data-id="${item.id}">
+            <div class="card-top">
+              <span class="card-title" title="${item.name}">${item.name}</span>
+              <span class="card-price">₱${Number(item.price).toFixed(2)}</span>
+            </div>
+            <div class="card-meta">
+              <span class="card-category">${item.category || 'General'}</span>
+              <span class="card-stock ${stockClass}">${stockText}</span>
+            </div>
+            <div class="barcode-svg-wrap" style="cursor: pointer;" title="Click to instantly send to POS cart" onclick="sendBarcodeToPos('${barcodeCode}', this)">
+              <svg id="svg-bc-${item.id}"></svg>
+            </div>
+            <div class="card-actions no-print">
+              <span class="sku-code">SKU: ${barcodeCode}</span>
+              <div style="display: flex; gap: 6px;">
+                <button type="button" class="copy-btn" onclick="copyBarcode('${barcodeCode}', this)">Copy</button>
+                <button type="button" class="copy-btn" style="background: #0284C7; color: #FFFFFF; border-color: #0284C7; font-weight: 600;" onclick="sendBarcodeToPos('${barcodeCode}', this)">+ Add to Cart</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Render actual Code 128 barcodes using JsBarcode
+      const isLarge = document.body.classList.contains('zoom-large');
+      filtered.forEach(item => {
+        const svgEl = document.getElementById(`svg-bc-${item.id}`);
+        const code = String(item.barcode || item.id);
+        if (svgEl && typeof JsBarcode !== 'undefined') {
+          try {
+            JsBarcode(svgEl, code, {
+              format: "CODE128",
+              width: isLarge ? 2.6 : 2.0,
+              height: isLarge ? 78 : 58,
+              displayValue: true,
+              font: "JetBrains Mono",
+              fontSize: 12,
+              textMargin: 4,
+              margin: 12,
+              lineColor: "#0F172A",
+              background: "#FFFFFF"
+            });
+          } catch (e) {
+            console.warn(`Barcode render error for ${item.name}:`, e);
+          }
+        }
+      });
+    }
+
+    let posChannel = null;
+    try { posChannel = new BroadcastChannel('pos_barcode_sync'); } catch(e) {}
+
+    function sendBarcodeToPos(code, el) {
+      if (posChannel) {
+        posChannel.postMessage({ type: 'BARCODE_SCANNED', code: code });
+      }
+      try {
+        localStorage.setItem('pos_scanned_barcode_event', JSON.stringify({ code: code, t: Date.now() }));
+      } catch(e) {}
+
+      if (el && el.tagName === 'BUTTON') {
+        const oldText = el.textContent;
+        el.textContent = '✓ Sent!';
+        el.style.background = '#10B981';
+        el.style.borderColor = '#10B981';
+        setTimeout(() => {
+          el.textContent = oldText;
+          el.style.background = '#0284C7';
+          el.style.borderColor = '#0284C7';
+        }, 900);
+      }
+    }
+
+    function copyBarcode(code, btn) {
+      navigator.clipboard.writeText(code).then(() => {
+        const oldText = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = oldText, 1200);
+      });
+    }
+
+    // Search input listener
+    document.getElementById('searchInput').addEventListener('input', renderGrid);
+
+    // Zoom scale toggle
+    const btnToggleZoom = document.getElementById('btnToggleZoom');
+    btnToggleZoom.addEventListener('click', () => {
+      document.body.classList.toggle('zoom-large');
+      const isLarge = document.body.classList.contains('zoom-large');
+      btnToggleZoom.textContent = isLarge ? 'Large Scale (Camera)' : 'Normal Scale';
+      renderGrid();
+    });
+
+    // Initial load
+    loadProducts();
+  </script>
+</body>
+</html>

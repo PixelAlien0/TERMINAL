@@ -121,6 +121,8 @@ const DOM = {
   barcodeModal: document.getElementById('barcodeModal'),
   barcodeModalCard: document.getElementById('barcodeModalCard'),
   barcodeManualInput: document.getElementById('barcodeManualInput'),
+  barcodeProductDropdown: document.getElementById('barcodeProductDropdown'),
+  barcodeDropdownCount: document.getElementById('barcodeDropdownCount'),
   btnSubmitBarcode: document.getElementById('btnSubmitBarcode'),
   btnCloseBarcode: document.getElementById('btnCloseBarcode'),
   cameraScannerVideo: document.getElementById('cameraScannerVideo'),
@@ -176,6 +178,14 @@ const DOM = {
   parkedOrdersModalCard: document.getElementById('parkedOrdersModalCard'),
   parkedOrdersList: document.getElementById('parkedOrdersList'),
   btnCloseParkedOrders: document.getElementById('btnCloseParkedOrders'),
+
+  // Secret Defense & Code Cheat Sheet
+  cheatSheetModal: document.getElementById('cheatSheetModal'),
+  cheatSheetModalCard: document.getElementById('cheatSheetModalCard'),
+  btnSecretCheatSheet: document.getElementById('btnSecretCheatSheet'),
+  brandStationPod: document.getElementById('brandStationPod'),
+  btnCloseCheatSheet: document.getElementById('btnCloseCheatSheet'),
+  btnDismissCheatSheet: document.getElementById('btnDismissCheatSheet'),
 
   // Overhauled Back-Office Console
   consoleModal: document.getElementById('consoleModal'),
@@ -1196,14 +1206,29 @@ function renderScannableBarcodePreview(code, name, price) {
         height: 52,
         displayValue: true,
         font: "Martian Mono",
-        fontSize: 11,
-        textMargin: 3,
+        fontSize: 12,
+        textMargin: 4,
+        margin: 10,
         lineColor: "#0F172A",
         background: "#FFFFFF"
       });
     } catch (err) {
       console.warn('Barcode preview render error:', err);
     }
+  }
+}
+
+function populateBarcodeProductDropdown(selectedCode) {
+  if (!DOM.barcodeProductDropdown) return;
+  const list = AppState.products || [];
+  DOM.barcodeProductDropdown.innerHTML = list.map(p => {
+    const code = String(p.barcode || p.id).trim();
+    const isSel = selectedCode && String(selectedCode).trim() === code ? 'selected' : '';
+    return `<option value="${escapeHtml(code)}" ${isSel}>${escapeHtml(p.name)} — SKU ${escapeHtml(code)} (${formatMoney(p.price)})</option>`;
+  }).join('');
+
+  if (DOM.barcodeDropdownCount) {
+    DOM.barcodeDropdownCount.textContent = `${list.length} products`;
   }
 }
 
@@ -1274,7 +1299,7 @@ function setupBarcodeWedgeScanner() {
 }
 
 async function resolveBarcodeScan(code) {
-  const cleanCode = code.trim();
+  const cleanCode = String(code).trim();
   if (!cleanCode) return;
 
   // If scanning a transaction QR code from a printed receipt
@@ -1292,16 +1317,36 @@ async function resolveBarcodeScan(code) {
     }
   }
 
-  try {
-    const product = await API.lookupBarcode(cleanCode);
-    if (product) {
-      addToCart(product);
-      showToast(`Scanned: ${product.name} (#${cleanCode})`, false, true);
-    } else {
-      showToast(`Barcode "${cleanCode}" not found in catalog.`, true);
-    }
-  } catch (err) {
-    showToast(`Scan error: ${err.message}`, true);
+  // 1. Direct in-memory lookup from already-loaded products
+  let product = AppState.products.find(p => 
+    String(p.barcode || '').trim().toLowerCase() === cleanCode.toLowerCase() ||
+    String(p.id).trim() === cleanCode
+  );
+
+  // 2. Server API lookup fallback
+  if (!product) {
+    try {
+      const res = await API.lookupBarcode(cleanCode);
+      if (res) product = res;
+    } catch (err) {}
+  }
+
+  // 3. Relaxed partial match (handles SKU prefix/suffix variations)
+  if (!product) {
+    product = AppState.products.find(p => {
+      const b = String(p.barcode || '').trim();
+      const id = String(p.id).trim();
+      return (b && (b.includes(cleanCode) || cleanCode.includes(b))) ||
+             cleanCode === id ||
+             cleanCode.endsWith(id);
+    });
+  }
+
+  if (product) {
+    addToCart(product);
+    showToast(`Added to cart: ${product.name} (₱${Number(product.price).toFixed(2)})`, false, true);
+  } else {
+    showToast(`Barcode "${cleanCode}" not found in catalog.`, true);
   }
 }
 
@@ -1315,9 +1360,124 @@ function handleManualBarcodeLookup() {
   closeModal(DOM.barcodeModal, DOM.barcodeModalCard);
 }
 
-// --- Phone Camera Barcode Scanner Subsystem ---
+// --- Phone / Webcam Camera Barcode Scanner Subsystem ---
 let cameraMediaStream = null;
-let cameraDetectorTimer = null;
+let cameraScanInterval = null;
+let isScanningActive = false;
+let zxingMultiReader = null;
+let zxingHints = null;
+
+// Reusable offscreen canvases for video frame extraction
+const scanCanvas = document.createElement('canvas');
+const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
+const cropCanvas = document.createElement('canvas');
+const cropCtx = cropCanvas.getContext('2d', { willReadFrequently: true });
+
+// Audio beep for instant POS scanner feedback
+function playScanBeep() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1760, ctx.currentTime);
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.12);
+  } catch (e) {}
+}
+
+function onSuccessfulScan(scannedCode) {
+  if (!scannedCode) return;
+  isScanningActive = false;
+  playScanBeep();
+  if (navigator.vibrate) {
+    try { navigator.vibrate(80); } catch(e) {}
+  }
+  stopCameraScanner();
+  closeModal(DOM.barcodeModal, DOM.barcodeModalCard);
+  resolveBarcodeScan(scannedCode);
+}
+
+function decodeVideoFrame() {
+  if (!isScanningActive || !DOM.cameraScannerVideo) return;
+  const v = DOM.cameraScannerVideo;
+  if (v.readyState < 2 || v.videoWidth < 20 || v.videoHeight < 20) return;
+
+  const vw = v.videoWidth;
+  const vh = v.videoHeight;
+
+  // 1. Draw full camera frame
+  if (scanCanvas.width !== vw || scanCanvas.height !== vh) {
+    scanCanvas.width = vw;
+    scanCanvas.height = vh;
+  }
+  scanCtx.drawImage(v, 0, 0, vw, vh);
+
+  if (typeof ZXing !== 'undefined') {
+    if (!zxingMultiReader) {
+      zxingMultiReader = new ZXing.MultiFormatReader();
+      zxingHints = new Map();
+      zxingHints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+      zxingHints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+        ZXing.BarcodeFormat.CODE_128,
+        ZXing.BarcodeFormat.EAN_13,
+        ZXing.BarcodeFormat.EAN_8,
+        ZXing.BarcodeFormat.CODE_39,
+        ZXing.BarcodeFormat.CODE_93,
+        ZXing.BarcodeFormat.UPC_A,
+        ZXing.BarcodeFormat.UPC_E,
+        ZXing.BarcodeFormat.QR_CODE,
+        ZXing.BarcodeFormat.ITF
+      ]);
+    }
+
+    // Try full frame
+    try {
+      const lum = new ZXing.HTMLCanvasElementLuminanceSource(scanCanvas);
+      const bin = new ZXing.HybridBinarizer(lum);
+      const bmp = new ZXing.BinaryBitmap(bin);
+      const result = zxingMultiReader.decode(bmp, zxingHints);
+      if (result && result.getText()) {
+        const code = result.getText().trim();
+        if (code) {
+          onSuccessfulScan(code);
+          return;
+        }
+      }
+    } catch (e) {}
+
+    // Try center-cropped viewfinder region (zooms in on barcode, removes glare/borders)
+    try {
+      const cropW = Math.floor(vw * 0.70);
+      const cropH = Math.floor(vh * 0.55);
+      const cropX = Math.floor((vw - cropW) / 2);
+      const cropY = Math.floor((vh - cropH) / 2);
+      if (cropCanvas.width !== cropW || cropCanvas.height !== cropH) {
+        cropCanvas.width = cropW;
+        cropCanvas.height = cropH;
+      }
+      cropCtx.drawImage(v, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+      const lumCrop = new ZXing.HTMLCanvasElementLuminanceSource(cropCanvas);
+      const binCrop = new ZXing.HybridBinarizer(lumCrop);
+      const bmpCrop = new ZXing.BinaryBitmap(binCrop);
+      const resultCrop = zxingMultiReader.decode(bmpCrop, zxingHints);
+      if (resultCrop && resultCrop.getText()) {
+        const code = resultCrop.getText().trim();
+        if (code) {
+          onSuccessfulScan(code);
+          return;
+        }
+      }
+    } catch (e) {}
+  }
+}
 
 async function startCameraScanner() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -1326,7 +1486,8 @@ async function startCameraScanner() {
   }
 
   try {
-    if (DOM.btnToggleCameraText) DOM.btnToggleCameraText.textContent = 'Requesting Camera...';
+    if (DOM.btnToggleCameraText) DOM.btnToggleCameraText.textContent = 'Starting Camera...';
+
     cameraMediaStream = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: { ideal: 'environment' },
@@ -1338,54 +1499,42 @@ async function startCameraScanner() {
     if (DOM.cameraScannerVideo) {
       DOM.cameraScannerVideo.srcObject = cameraMediaStream;
       DOM.cameraScannerVideo.style.display = 'block';
+      await DOM.cameraScannerVideo.play();
     }
+
     if (DOM.cameraScannerReticle) DOM.cameraScannerReticle.style.display = 'block';
     if (DOM.barcodeDefaultPlaceholder) DOM.barcodeDefaultPlaceholder.style.display = 'none';
     if (DOM.btnToggleCameraText) DOM.btnToggleCameraText.textContent = 'Stop Phone Camera';
     if (DOM.barcodeScannerStatusNote) {
-      DOM.barcodeScannerStatusNote.textContent = 'Camera active. Center barcode inside viewfinder.';
+      DOM.barcodeScannerStatusNote.textContent = 'Camera active. Point at barcode to scan.';
     }
 
-    if ('BarcodeDetector' in window) {
-      const barcodeDetector = new BarcodeDetector({
-        formats: ['ean_13', 'code_128', 'code_39', 'qr_code', 'upc_a', 'upc_e']
-      });
+    isScanningActive = true;
 
-      cameraDetectorTimer = setInterval(async () => {
-        if (!cameraMediaStream || !DOM.cameraScannerVideo || DOM.cameraScannerVideo.readyState < 2) return;
-        try {
-          const detectedBarcodes = await barcodeDetector.detect(DOM.cameraScannerVideo);
-          if (detectedBarcodes && detectedBarcodes.length > 0) {
-            const scannedCode = detectedBarcodes[0].rawValue;
-            if (navigator.vibrate) navigator.vibrate(100);
-            stopCameraScanner();
-            closeModal(DOM.barcodeModal, DOM.barcodeModalCard);
-            resolveBarcodeScan(scannedCode);
-          }
-        } catch (err) {}
-      }, 250);
-    } else {
-      if (DOM.barcodeScannerStatusNote) {
-        DOM.barcodeScannerStatusNote.textContent = 'Viewfinder active. Tap "Snap Photo" or enter SKU to decode.';
-      }
-    }
+    if (cameraScanInterval) clearInterval(cameraScanInterval);
+    cameraScanInterval = setInterval(decodeVideoFrame, 90);
+
   } catch (err) {
     console.warn('Camera access denied or unavailable:', err);
-    showToast('Camera permission denied or camera not found.', true);
+    showToast('Camera error: ' + (err.message || 'Permission denied'), true);
     stopCameraScanner();
   }
 }
 
 function stopCameraScanner() {
-  if (cameraDetectorTimer) {
-    clearInterval(cameraDetectorTimer);
-    cameraDetectorTimer = null;
+  isScanningActive = false;
+  if (cameraScanInterval) {
+    clearInterval(cameraScanInterval);
+    cameraScanInterval = null;
   }
   if (cameraMediaStream) {
-    cameraMediaStream.getTracks().forEach(track => track.stop());
+    try {
+      cameraMediaStream.getTracks().forEach(track => track.stop());
+    } catch (e) {}
     cameraMediaStream = null;
   }
   if (DOM.cameraScannerVideo) {
+    try { DOM.cameraScannerVideo.pause(); } catch(e) {}
     DOM.cameraScannerVideo.srcObject = null;
     DOM.cameraScannerVideo.style.display = 'none';
   }
@@ -1399,12 +1548,12 @@ function stopCameraScanner() {
     DOM.btnToggleCameraText.textContent = 'Start Phone Camera';
   }
   if (DOM.barcodeScannerStatusNote) {
-    DOM.barcodeScannerStatusNote.textContent = 'Hardware wedge active or click below to launch phone camera';
+    DOM.barcodeScannerStatusNote.textContent = 'Literal scannable barcode ready. Use camera, laser wedge, or click sample to test.';
   }
 }
 
 function toggleCameraScanner() {
-  if (cameraMediaStream) {
+  if (isScanningActive || cameraMediaStream || cameraScanInterval) {
     stopCameraScanner();
   } else {
     startCameraScanner();
@@ -1414,29 +1563,39 @@ function toggleCameraScanner() {
 async function handlePhoneImageSnap(file) {
   if (!file) return;
 
-  if (!('BarcodeDetector' in window)) {
-    showToast('BarcodeDetector not available. Enter barcode number directly.', true);
-    return;
-  }
-
   try {
     showToast('Analyzing barcode photo...');
-    const bitmap = await createImageBitmap(file);
-    const detector = new BarcodeDetector({
-      formats: ['ean_13', 'code_128', 'code_39', 'qr_code', 'upc_a', 'upc_e']
-    });
-    const detected = await detector.detect(bitmap);
-    if (detected && detected.length > 0) {
-      const code = detected[0].rawValue;
-      if (navigator.vibrate) navigator.vibrate(100);
-      stopCameraScanner();
-      closeModal(DOM.barcodeModal, DOM.barcodeModalCard);
-      resolveBarcodeScan(code);
-    } else {
-      showToast('No barcode detected in photo. Try higher contrast.', true);
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+
+    scanCanvas.width = img.naturalWidth || img.width;
+    scanCanvas.height = img.naturalHeight || img.height;
+    scanCtx.drawImage(img, 0, 0, scanCanvas.width, scanCanvas.height);
+    URL.revokeObjectURL(url);
+
+    if (typeof ZXing !== 'undefined') {
+      try {
+        const lum = new ZXing.HTMLCanvasElementLuminanceSource(scanCanvas);
+        const bin = new ZXing.HybridBinarizer(lum);
+        const bmp = new ZXing.BinaryBitmap(bin);
+        const reader = new ZXing.MultiFormatReader();
+        const hints = new Map();
+        hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+        const result = reader.decode(bmp, hints);
+        if (result && result.getText()) {
+          const code = result.getText().trim();
+          onSuccessfulScan(code);
+          return;
+        }
+      } catch (notFound) {
+        showToast('No barcode detected in photo. Try holding closer with good lighting.', true);
+        return;
+      }
     }
   } catch (err) {
-    showToast('Photo decode error: ' + err.message, true);
+    showToast('Photo decode error: ' + (err.message || err), true);
   }
 }
 
@@ -1740,6 +1899,28 @@ function syncCashierUI(name) {
   if (DOM.settingsCashierName) DOM.settingsCashierName.value = cashierName;
   if (DOM.dashboardCashierDisplay) DOM.dashboardCashierDisplay.textContent = cashierName;
   if (DOM.dashboardActiveCashierName) DOM.dashboardActiveCashierName.textContent = cashierName;
+}
+
+// --- Defense & Code Cheat Sheet ---
+function openCheatSheetModal() {
+  if (!DOM.cheatSheetModal) return;
+  openModal(DOM.cheatSheetModal, DOM.cheatSheetModalCard);
+}
+
+function switchCheatSheetTab(targetTabId) {
+  if (!DOM.cheatSheetModal) return;
+  const tabBtns = DOM.cheatSheetModal.querySelectorAll('.cs-tab-btn');
+  const panes = DOM.cheatSheetModal.querySelectorAll('.cs-pane');
+  tabBtns.forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-cstab') === targetTabId);
+  });
+  panes.forEach(pane => {
+    const isTarget = pane.id === targetTabId;
+    pane.style.display = isTarget ? 'block' : 'none';
+    if (isTarget && window.gsap) {
+      gsap.fromTo(pane, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.15, ease: 'power2.out' });
+    }
+  });
 }
 
 // --- Back-Office Console ---
@@ -2364,8 +2545,23 @@ function setupEventListeners() {
     }
     if (e.key === 'F3') {
       e.preventDefault();
+      stopCameraScanner();
+      const currentProd = AppState.products[0];
+      if (currentProd) {
+        populateBarcodeProductDropdown(currentProd.barcode || currentProd.id);
+        renderScannableBarcodePreview(currentProd.barcode || currentProd.id, currentProd.name, currentProd.price);
+        if (DOM.barcodeManualInput) DOM.barcodeManualInput.value = currentProd.barcode || currentProd.id;
+      }
       openModal(DOM.barcodeModal, DOM.barcodeModalCard);
-      setTimeout(() => DOM.barcodeManualInput.focus(), 100);
+      setTimeout(() => DOM.barcodeManualInput && DOM.barcodeManualInput.focus(), 100);
+    }
+    if (e.key === 'F1' || (e.shiftKey && e.key === '?')) {
+      e.preventDefault();
+      if (DOM.cheatSheetModal && DOM.cheatSheetModal.classList.contains('active')) {
+        closeModal(DOM.cheatSheetModal, DOM.cheatSheetModalCard);
+      } else {
+        openCheatSheetModal();
+      }
     }
     if (e.key === 'F2') {
       e.preventDefault();
@@ -2383,6 +2579,7 @@ function setupEventListeners() {
       closeModal(DOM.checkoutModal, DOM.checkoutModalCard);
       closeModal(DOM.receiptModal, DOM.receiptModalCard);
       closeModal(DOM.consoleModal, DOM.consoleModalCard);
+      closeModal(DOM.cheatSheetModal, DOM.cheatSheetModalCard);
       closeModal(DOM.modifierModal, DOM.modifierModalCard);
       closeModal(DOM.barcodeModal, DOM.barcodeModalCard);
       closeModal(DOM.barcodeLabelModal, DOM.barcodeLabelModalCard);
@@ -2457,10 +2654,11 @@ function setupEventListeners() {
   // Barcode modal & Camera Scanner
   DOM.btnOpenBarcodeModal.addEventListener('click', () => {
     stopCameraScanner();
-    const sampleProd = AppState.products.find(p => p.barcode === '8901001') || AppState.products[0];
-    if (sampleProd) {
-      renderScannableBarcodePreview(sampleProd.barcode || sampleProd.id, sampleProd.name, sampleProd.price);
-      if (DOM.barcodeManualInput) DOM.barcodeManualInput.value = sampleProd.barcode || sampleProd.id;
+    const currentProd = AppState.products[0];
+    if (currentProd) {
+      populateBarcodeProductDropdown(currentProd.barcode || currentProd.id);
+      renderScannableBarcodePreview(currentProd.barcode || currentProd.id, currentProd.name, currentProd.price);
+      if (DOM.barcodeManualInput) DOM.barcodeManualInput.value = currentProd.barcode || currentProd.id;
     }
     openModal(DOM.barcodeModal, DOM.barcodeModalCard);
     setTimeout(() => {
@@ -2474,6 +2672,18 @@ function setupEventListeners() {
   });
   DOM.btnSubmitBarcode.addEventListener('click', handleManualBarcodeLookup);
 
+  // Dynamic Product Dropdown selector inside scanner modal
+  if (DOM.barcodeProductDropdown) {
+    DOM.barcodeProductDropdown.addEventListener('change', (e) => {
+      const code = e.target.value.trim();
+      const matched = AppState.products.find(p => String(p.barcode || p.id).trim() === code);
+      if (matched) {
+        if (DOM.barcodeManualInput) DOM.barcodeManualInput.value = matched.barcode || matched.id;
+        renderScannableBarcodePreview(matched.barcode || matched.id, matched.name, matched.price);
+      }
+    });
+  }
+
   // Live scannable barcode preview updates when typing in manual input
   if (DOM.barcodeManualInput) {
     DOM.barcodeManualInput.addEventListener('input', (e) => {
@@ -2484,6 +2694,9 @@ function setupEventListeners() {
           String(p.id) === code
         );
         renderScannableBarcodePreview(code, matchedProd?.name || 'Catalog Item', matchedProd?.price);
+        if (matchedProd && DOM.barcodeProductDropdown) {
+          DOM.barcodeProductDropdown.value = matchedProd.barcode || matchedProd.id;
+        }
       }
     });
   }
@@ -2520,6 +2733,38 @@ function setupEventListeners() {
       const matchedProd = AppState.products.find(p => String(p.barcode || p.id) === String(code));
       renderScannableBarcodePreview(code, matchedProd?.name, matchedProd?.price);
     });
+  });
+
+  // Interactive scannable barcode card click -> instant scan & add to cart
+  const interactiveTarget = document.getElementById('interactiveBarcodeTarget');
+  if (interactiveTarget) {
+    interactiveTarget.style.cursor = 'pointer';
+    interactiveTarget.setAttribute('title', 'Click to scan and add to cart');
+    interactiveTarget.addEventListener('click', () => {
+      const code = DOM.barcodeManualInput?.value?.trim() || '8901001';
+      onSuccessfulScan(code);
+    });
+  }
+
+  // Cross-tab scanner listener for dual-screen testing
+  try {
+    const posChannel = new BroadcastChannel('pos_barcode_sync');
+    posChannel.onmessage = (event) => {
+      if (event.data && event.data.code) {
+        onSuccessfulScan(event.data.code);
+      }
+    };
+  } catch (e) {}
+
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'pos_scanned_barcode_event' && event.newValue) {
+      try {
+        const data = JSON.parse(event.newValue);
+        if (data && data.code) {
+          onSuccessfulScan(data.code);
+        }
+      } catch (e) {}
+    }
   });
 
   // Dedicated Product Barcode Label Modal Events
@@ -2642,6 +2887,27 @@ function setupEventListeners() {
   DOM.newProductForm.addEventListener('submit', handleCreateProduct);
   DOM.settingsForm.addEventListener('submit', handleSaveSettings);
 
+  // Defense & Code Cheat Sheet Listeners
+  if (DOM.btnSecretCheatSheet) {
+    DOM.btnSecretCheatSheet.addEventListener('click', openCheatSheetModal);
+  }
+  if (DOM.brandStationPod) {
+    DOM.brandStationPod.addEventListener('click', openCheatSheetModal);
+  }
+  if (DOM.btnCloseCheatSheet) {
+    DOM.btnCloseCheatSheet.addEventListener('click', () => closeModal(DOM.cheatSheetModal, DOM.cheatSheetModalCard));
+  }
+  if (DOM.btnDismissCheatSheet) {
+    DOM.btnDismissCheatSheet.addEventListener('click', () => closeModal(DOM.cheatSheetModal, DOM.cheatSheetModalCard));
+  }
+  if (DOM.cheatSheetModal) {
+    DOM.cheatSheetModal.querySelectorAll('.cs-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        switchCheatSheetTab(btn.getAttribute('data-cstab'));
+      });
+    });
+  }
+
   // Checkout modal
   DOM.tenderInput.addEventListener('input', validateTender);
   DOM.btnCompleteSale.addEventListener('click', handleCompleteSale);
@@ -2656,10 +2922,12 @@ function setupEventListeners() {
   [
     DOM.checkoutModal, DOM.receiptModal, DOM.consoleModal,
     DOM.modifierModal, DOM.barcodeModal, DOM.deleteConfirmModal,
-    DOM.editProductModal, DOM.parkedOrdersModal
+    DOM.editProductModal, DOM.parkedOrdersModal, DOM.cheatSheetModal
   ].forEach(modal => {
+    if (!modal) return;
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
+        if (modal === DOM.barcodeModal) stopCameraScanner();
         const card = modal.querySelector('.modal-card') || modal.querySelector('.console-container');
         closeModal(modal, card);
       }

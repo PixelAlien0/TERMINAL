@@ -3,21 +3,21 @@
                Terminal 06                
             +63 (02) 8123-4567            
 ==========================================
-Receipt ID: TX-20260925193228-101
-Date/Time:  2026-09-25 19:32:28
-Cashier:    Sync Verification Agent
+Receipt ID: TX-20261005161829-101
+Date/Time:  2026-10-05 16:18:29
+Cashier:    Terminal 01
 ------------------------------------------
 Item                  Qty  Price     Total
 ------------------------------------------
-Barako Espresso       1    ₱145.00 ₱145.00
-  + Extra Shot (+₱25.00)          
-  * Note: Sync Test                       
+Barako Espresso       2    ₱120.50 ₱241.00
+  + Oat Milk (+₱0.50)             
+  * Note: Extra hot
 ------------------------------------------
-Subtotal:                          ₱145.00
-VAT (12.00%):                       ₱17.40
-Total Due:                         ₱162.40
-Cash Tendered:                     ₱500.00
-Change Given:                      ₱337.60
+Subtotal:                          ₱241.00
+VAT (10.00%):                       ₱24.10
+Total Due:                         ₱265.10
+Cash Tendered:                     ₱365.10
+Change Given:                      ₱100.00
 ==========================================
    Scan QR code below for digital copy    
 ==========================================

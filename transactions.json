@@ -1129,5 +1129,440 @@
         "payment": 500.0,
         "change": 337.6,
         "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20260925193228-101\nDate/Time:  2026-09-25 19:32:28\nCashier:    Sync Verification Agent\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       1    \u20b1145.00 \u20b1145.00\n  + Extra Shot (+\u20b125.00)          \n  * Note: Sync Test                       \n------------------------------------------\nSubtotal:                          \u20b1145.00\nVAT (12.00%):                       \u20b117.40\nTotal Due:                         \u20b1162.40\nCash Tendered:                     \u20b1500.00\nChange Given:                      \u20b1337.60\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20261005141901-101",
+        "timestamp": "2026-10-05 14:19:01",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20261005141901-101\nDate/Time:  2026-10-05 14:19:01\nCashier:    Terminal 01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot                       \n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (10.00%):                       \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20261005142032-101",
+        "timestamp": "2026-10-05 14:20:32",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20261005142032-101\nDate/Time:  2026-10-05 14:20:32\nCashier:    Terminal 01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot\n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (10.00%):                       \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20261005142051-101",
+        "timestamp": "2026-10-05 14:20:51",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20261005142051-101\nDate/Time:  2026-10-05 14:20:51\nCashier:    Terminal 01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot\n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (10.00%):                       \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20261005142113-101",
+        "timestamp": "2026-10-05 14:21:13",
+        "cashier": "Sync Verification Agent",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 145.0,
+                "qty": 1,
+                "modifiers": [
+                    {
+                        "name": "Extra Shot",
+                        "price": 25.0
+                    }
+                ],
+                "notes": "Sync Test",
+                "total": 145.0
+            }
+        ],
+        "subtotal": 145.0,
+        "tax_rate": 12.0,
+        "tax_amount": 17.4,
+        "total_due": 162.4,
+        "payment": 500.0,
+        "change": 337.6,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20261005142113-101\nDate/Time:  2026-10-05 14:21:13\nCashier:    Sync Verification Agent\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       1    \u20b1145.00 \u20b1145.00\n  + Extra Shot (+\u20b125.00)          \n  * Note: Sync Test\n------------------------------------------\nSubtotal:                          \u20b1145.00\nVAT (12.00%):                       \u20b117.40\nTotal Due:                         \u20b1162.40\nCash Tendered:                     \u20b1500.00\nChange Given:                      \u20b1337.60\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20261005152452-101",
+        "timestamp": "2026-10-05 15:24:52",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20261005152452-101\nDate/Time:  2026-10-05 15:24:52\nCashier:    Terminal 01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot\n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (10.00%):                       \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20261005152458-101",
+        "timestamp": "2026-10-05 15:24:58",
+        "cashier": "Sync Verification Agent",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 145.0,
+                "qty": 1,
+                "modifiers": [
+                    {
+                        "name": "Extra Shot",
+                        "price": 25.0
+                    }
+                ],
+                "notes": "Sync Test",
+                "total": 145.0
+            }
+        ],
+        "subtotal": 145.0,
+        "tax_rate": 12.0,
+        "tax_amount": 17.4,
+        "total_due": 162.4,
+        "payment": 500.0,
+        "change": 337.6,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20261005152458-101\nDate/Time:  2026-10-05 15:24:58\nCashier:    Sync Verification Agent\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       1    \u20b1145.00 \u20b1145.00\n  + Extra Shot (+\u20b125.00)          \n  * Note: Sync Test\n------------------------------------------\nSubtotal:                          \u20b1145.00\nVAT (12.00%):                       \u20b117.40\nTotal Due:                         \u20b1162.40\nCash Tendered:                     \u20b1500.00\nChange Given:                      \u20b1337.60\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20261005152853-101",
+        "timestamp": "2026-10-05 15:28:53",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20261005152853-101\nDate/Time:  2026-10-05 15:28:53\nCashier:    Terminal 01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot\n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (10.00%):                       \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20261005153316-101",
+        "timestamp": "2026-10-05 15:33:16",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20261005153316-101\nDate/Time:  2026-10-05 15:33:16\nCashier:    Terminal 01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot\n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (10.00%):                       \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20261005153522-101",
+        "timestamp": "2026-10-05 15:35:22",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20261005153522-101\nDate/Time:  2026-10-05 15:35:22\nCashier:    Terminal 01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot\n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (10.00%):                       \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20261005154402-101",
+        "timestamp": "2026-10-05 15:44:02",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20261005154402-101\nDate/Time:  2026-10-05 15:44:02\nCashier:    Terminal 01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot\n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (10.00%):                       \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20261005155251-101",
+        "timestamp": "2026-10-05 15:52:51",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20261005155251-101\nDate/Time:  2026-10-05 15:52:51\nCashier:    Terminal 01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot\n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (10.00%):                       \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20261005160341-101",
+        "timestamp": "2026-10-05 16:03:41",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20261005160341-101\nDate/Time:  2026-10-05 16:03:41\nCashier:    Terminal 01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot\n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (10.00%):                       \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20261005160624-101",
+        "timestamp": "2026-10-05 16:06:24",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20261005160624-101\nDate/Time:  2026-10-05 16:06:24\nCashier:    Terminal 01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot\n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (10.00%):                       \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20261005160809-101",
+        "timestamp": "2026-10-05 16:08:09",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20261005160809-101\nDate/Time:  2026-10-05 16:08:09\nCashier:    Terminal 01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot\n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (10.00%):                       \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
+    },
+    {
+        "id": "TX-20261005161829-101",
+        "timestamp": "2026-10-05 16:18:29",
+        "cashier": "Terminal 01",
+        "items": [
+            {
+                "id": 101,
+                "name": "Barako Espresso",
+                "base_price": 120.0,
+                "unit_price": 120.5,
+                "qty": 2,
+                "modifiers": [
+                    {
+                        "name": "Oat Milk",
+                        "price": 0.5
+                    }
+                ],
+                "notes": "Extra hot",
+                "total": 241.0
+            }
+        ],
+        "subtotal": 241.0,
+        "tax_rate": 10.0,
+        "tax_amount": 24.1,
+        "total_due": 265.1,
+        "payment": 365.1,
+        "change": 100.0,
+        "receipt_text": "==========================================\n              Keith's Market              \n               Terminal 06                \n            +63 (02) 8123-4567            \n==========================================\nReceipt ID: TX-20261005161829-101\nDate/Time:  2026-10-05 16:18:29\nCashier:    Terminal 01\n------------------------------------------\nItem                  Qty  Price     Total\n------------------------------------------\nBarako Espresso       2    \u20b1120.50 \u20b1241.00\n  + Oat Milk (+\u20b10.50)             \n  * Note: Extra hot\n------------------------------------------\nSubtotal:                          \u20b1241.00\nVAT (10.00%):                       \u20b124.10\nTotal Due:                         \u20b1265.10\nCash Tendered:                     \u20b1365.10\nChange Given:                      \u20b1100.00\n==========================================\n   Scan QR code below for digital copy    \n=========================================="
     }
 ]
