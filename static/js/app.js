@@ -751,12 +751,12 @@ function renderProducts() {
     }
 
     card.innerHTML = `
-      <div>
+      <div class="card-body">
         <div class="card-top">
-          <span class="product-barcode-pill">${p.barcode || '#' + p.id}</span>
+          <span class="product-barcode-pill" title="Click to view/print barcode label">${escapeHtml(p.barcode || '#' + p.id)}</span>
           <span class="stock-tag ${stockTagClass}"><span class="badge-dot"></span>${stockLabel}</span>
         </div>
-        <div class="product-name">${escapeHtml(p.name)}</div>
+        <div class="product-name" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</div>
         <div class="product-category-label">
           <span class="product-card-icon">${getIconSvg(p.icon || p.category)}</span>
           <span>${escapeHtml(p.category || 'General')}</span>
@@ -764,8 +764,8 @@ function renderProducts() {
       </div>
       <div class="card-bottom">
         <span class="product-price tabular-num">${formatMoney(p.price)}</span>
-        <span class="product-units tabular-num" style="${isLowStock ? 'color: var(--accent-amber); font-weight: 700;' : (isOutOfStock ? 'color: var(--accent-rose); font-weight: 700;' : '')}">
-          ${isOutOfStock ? 'Sold Out' : (isLowStock ? `Low: ${p.stock} left` : `${p.stock} left`)}
+        <span class="product-units tabular-num" style="${isLowStock ? 'color: #B45309; font-weight: 700; background: #FFFBEB; border-color: #FDE68A;' : (isOutOfStock ? 'color: #B91C1C; font-weight: 700; background: #FEF2F2; border-color: #FECACA;' : '')}">
+          ${isOutOfStock ? 'Sold Out' : (isLowStock ? `Low: ${p.stock}` : `${p.stock} left`)}
         </span>
       </div>
     `;
