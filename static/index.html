@@ -265,15 +265,10 @@
       <div class="docked-mall-scanner" id="dockedMallScanner" style="display: none;">
         <div class="docked-scanner-visor" id="dockedScannerVisor">
           <video id="mallDockedVideo" playsinline autoplay muted></video>
-          <div class="scanner-laser-line"></div>
           <div class="scanner-reticle-box"></div>
           
           <div class="scanner-visor-overlay">
-            <div class="scanner-live-badge">
-              <span class="live-dot pulse"></span>
-              <span>MALL SCANNER LIVE</span>
-            </div>
-            <div class="scanner-controls-strip">
+            <div class="scanner-controls-strip" style="margin-left: auto;">
               <button type="button" class="visor-btn" id="btnSwitchCamera" title="Switch Camera (Front/Rear)">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
@@ -296,7 +291,7 @@
           </div>
         </div>
         <div class="docked-scanner-footer">
-          <span class="footer-hint">Continuous swipe &bull; Auto-adds to cart</span>
+          <span class="footer-hint">Barcode Scanner &bull; Auto-adds to cart</span>
           <span class="footer-count" id="mallScanCount">0 scanned</span>
         </div>
       </div>
@@ -420,7 +415,7 @@
         <div class="mall-modal-toggle-row">
           <div class="mall-toggle-info">
             <span class="mall-toggle-title">Hands-Free Mall Scanner</span>
-            <span class="mall-toggle-sub">Continuous live camera &bull; Auto-adds to cart</span>
+            <span class="mall-toggle-sub">Continuous camera &bull; Auto-adds to cart</span>
           </div>
           <button type="button" class="mall-toggle-action-btn" id="btnToggleCameraScanner">
             <span class="scanner-switch-pip" id="modalScannerPip"></span>

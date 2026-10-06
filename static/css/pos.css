@@ -3362,25 +3362,6 @@ input:checked + .toggle-slider:before {
   display: block;
 }
 
-.scanner-laser-line {
-  position: absolute;
-  left: 8%;
-  right: 8%;
-  height: 2px;
-  background: #EF4444;
-  box-shadow: 0 0 10px #EF4444, 0 0 4px #F87171;
-  border-radius: 1px;
-  pointer-events: none;
-  z-index: 5;
-  animation: laserSweep 2s ease-in-out infinite alternate;
-}
-
-@keyframes laserSweep {
-  0% { top: 22%; opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { top: 78%; opacity: 0.6; }
-}
-
 .scanner-reticle-box {
   position: absolute;
   width: 84%;
@@ -3399,48 +3380,16 @@ input:checked + .toggle-slider:before {
   box-shadow: 0 0 0 9999px rgba(16, 185, 129, 0.25) !important;
 }
 
-.docked-scanner-visor.scan-flash .scanner-laser-line {
-  background: #10B981 !important;
-  box-shadow: 0 0 12px #10B981 !important;
-}
-
 .scanner-visor-overlay {
   position: absolute;
   top: 8px;
   left: 8px;
   right: 8px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   z-index: 10;
   pointer-events: none;
-}
-
-.scanner-live-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(15, 23, 42, 0.85);
-  color: #38BDF8;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 9999px;
-  letter-spacing: 0.04em;
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  backdrop-filter: blur(4px);
-}
-
-.live-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #38BDF8;
-}
-
-.live-dot.pulse {
-  background: #10B981;
-  box-shadow: 0 0 8px #10B981;
 }
 
 .scanner-controls-strip {

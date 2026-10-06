@@ -1580,7 +1580,7 @@ function updateMallScannerUI(active) {
     DOM.telemetryScannerPip.classList.toggle('active', active);
   }
   if (DOM.telemetryScannerText) {
-    DOM.telemetryScannerText.textContent = active ? 'Scanner LIVE' : 'Scanner OFF';
+    DOM.telemetryScannerText.textContent = active ? 'Scanner ON' : 'Scanner OFF';
   }
 
   if (DOM.btnToggleCameraScanner) {
