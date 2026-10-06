@@ -38,32 +38,54 @@
       padding-bottom: 60px;
     }
 
-    /* Header & Navigation */
+    /* Dynamic Fluid Header & Navigation */
     .top-header {
       background: #FFFFFF;
       border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
       z-index: 100;
-      padding: 14px 28px;
+      padding: clamp(8px, 1.4vw, 12px) clamp(12px, 2.5vw, 28px);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 16px;
+      gap: clamp(8px, 1.5vw, 16px);
       box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+      transition: max-height 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.22s ease,
+                  padding 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-color 0.2s ease,
+                  transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      max-height: 160px;
+      overflow: visible;
+      will-change: transform, max-height, opacity;
+    }
+
+    /* Hidden State for Top Header */
+    .top-header.header-hidden {
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      opacity: 0;
+      overflow: hidden;
+      border-bottom-color: transparent;
+      pointer-events: none;
+      transform: translateY(-100%);
     }
 
     .header-left {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: clamp(8px, 1.5vw, 16px);
+      min-width: 0;
+      flex: 1 1 auto;
     }
 
     .back-btn {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 8px 14px;
+      padding: 7px 12px;
       background: var(--bg-page);
       border: 1px solid var(--border);
       border-radius: 6px;
@@ -71,6 +93,8 @@
       text-decoration: none;
       font-size: 12.5px;
       font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
       transition: all 0.15s ease;
     }
 
@@ -78,35 +102,61 @@
       background: #E2E8F0;
     }
 
+    .header-titles {
+      min-width: 0;
+    }
+
     .header-titles h1 {
-      font-size: 17px;
+      font-size: clamp(14px, 1.7vw, 17px);
       font-weight: 800;
       letter-spacing: -0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .header-titles p {
-      font-size: 12px;
+      font-size: clamp(11px, 1.1vw, 12px);
       color: var(--text-secondary);
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+      flex-shrink: 0;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
+      gap: 6px;
+      padding: 7px 13px;
       border-radius: 6px;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 600;
       cursor: pointer;
       border: 1px solid transparent;
       transition: all 0.15s ease;
       font-family: inherit;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .btn-kbd {
+      background: rgba(0, 0, 0, 0.07);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 3px;
+      padding: 1px 4px;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      line-height: 1;
+      margin-left: 2px;
     }
 
     .btn-primary {
@@ -124,6 +174,105 @@
     }
     .btn-secondary:hover {
       background: #F1F5F9;
+      border-color: var(--border-strong);
+    }
+
+    .btn-hide-toggle {
+      background: #F8FAFC;
+      border-color: var(--border);
+      color: var(--text-secondary);
+    }
+    .btn-hide-toggle:hover {
+      background: #F1F5F9;
+      color: var(--text-primary);
+      border-color: var(--border-strong);
+    }
+
+    /* Floating Restore Trigger (Visible when header is hidden) */
+    .floating-show-header {
+      position: fixed;
+      top: 10px;
+      right: 18px;
+      z-index: 1000;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 13px;
+      background: rgba(15, 23, 42, 0.92);
+      color: #FFFFFF;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 9999px;
+      font-size: 11.5px;
+      font-weight: 600;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.2);
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-10px);
+      transition: opacity 0.22s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background 0.15s ease;
+      font-family: inherit;
+    }
+
+    .floating-show-header.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .floating-show-header:hover {
+      background: #0F172A;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.3);
+    }
+
+    .floating-show-header .kbd-hint {
+      background: rgba(255, 255, 255, 0.22);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 9.5px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      margin-left: 2px;
+    }
+
+    /* Fluid Responsive Breakpoints for Header */
+    @media (max-width: 960px) {
+      .header-titles p {
+        display: none; /* Hide subtitle to preserve sleek single-line header */
+      }
+    }
+
+    @media (max-width: 740px) {
+      .top-header {
+        flex-wrap: wrap;
+        padding: 8px 14px;
+        gap: 8px;
+      }
+      .header-left {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .header-actions {
+        width: 100%;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+      .btn-print-text {
+        display: none;
+      }
+    }
+
+    @media (max-width: 440px) {
+      .back-btn span {
+        display: none;
+      }
+      .btn-hide-text {
+        display: none;
+      }
+      .btn-scale-label {
+        display: none;
+      }
     }
 
     /* Toolbar: Search & Category Filter */
@@ -403,8 +552,17 @@
 </head>
 <body>
 
+  <!-- Floating Restore Header Trigger (Visible when header is hidden) -->
+  <button type="button" id="btnShowHeader" class="floating-show-header no-print" title="Show top navigation (Press 'H' or Escape)">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+    <span>Show Header</span>
+    <kbd class="kbd-hint">H</kbd>
+  </button>
+
   <!-- Top Sticky Navigation -->
-  <header class="top-header no-print">
+  <header class="top-header no-print" id="topHeader">
     <div class="header-left">
       <a href="index.html" class="back-btn" title="Return to Point of Sale Terminal">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -419,12 +577,10 @@
     </div>
 
     <div class="header-actions">
-      <div class="size-toggle-wrap">
-        <span>Barcode Scale:</span>
-        <button type="button" class="btn btn-secondary" id="btnToggleZoom" style="padding: 5px 12px; font-size: 12px;">
-          Normal Scale
-        </button>
-      </div>
+      <button type="button" class="btn btn-secondary" id="btnToggleZoom" title="Toggle barcode card size for distance scanning">
+        <span class="btn-scale-label">Scale: </span>
+        <span id="zoomStatusText">Normal</span>
+      </button>
 
       <button type="button" class="btn btn-primary" onclick="window.print()" title="Print physical sticker sheet or save as PDF">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -432,7 +588,15 @@
           <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
           <rect x="6" y="14" width="12" height="8"></rect>
         </svg>
-        <span>Print Barcode Sheet</span>
+        <span class="btn-print-text">Print Barcode Sheet</span>
+      </button>
+
+      <button type="button" class="btn btn-hide-toggle" id="btnHideHeader" title="Hide top header to maximize screen space (Press 'H')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+        <span class="btn-hide-text">Hide</span>
+        <kbd class="btn-kbd">H</kbd>
       </button>
     </div>
   </header>
@@ -623,14 +787,64 @@
     // Search input listener
     document.getElementById('searchInput').addEventListener('input', renderGrid);
 
+    // Header Visibility & Collapse Logic
+    const topHeader = document.getElementById('topHeader');
+    const btnHideHeader = document.getElementById('btnHideHeader');
+    const btnShowHeader = document.getElementById('btnShowHeader');
+
+    function setHeaderVisibility(visible) {
+      if (!topHeader) return;
+      if (visible) {
+        topHeader.classList.remove('header-hidden');
+        if (btnShowHeader) btnShowHeader.classList.remove('active');
+        localStorage.setItem('barcodes_header_hidden', 'false');
+      } else {
+        topHeader.classList.add('header-hidden');
+        if (btnShowHeader) btnShowHeader.classList.add('active');
+        localStorage.setItem('barcodes_header_hidden', 'true');
+      }
+    }
+
+    if (btnHideHeader) {
+      btnHideHeader.addEventListener('click', () => setHeaderVisibility(false));
+    }
+    if (btnShowHeader) {
+      btnShowHeader.addEventListener('click', () => setHeaderVisibility(true));
+    }
+
+    // Keyboard shortcut (H) to toggle header when not typing in inputs
+    window.addEventListener('keydown', (e) => {
+      const activeTag = (document.activeElement && document.activeElement.tagName) || '';
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') {
+        return;
+      }
+      if (e.key === 'h' || e.key === 'H') {
+        e.preventDefault();
+        const isHidden = topHeader && topHeader.classList.contains('header-hidden');
+        setHeaderVisibility(isHidden);
+      } else if (e.key === 'Escape' && topHeader && topHeader.classList.contains('header-hidden')) {
+        setHeaderVisibility(true);
+      }
+    });
+
+    // Restore saved header preference
+    if (localStorage.getItem('barcodes_header_hidden') === 'true') {
+      setHeaderVisibility(false);
+    }
+
     // Zoom scale toggle
     const btnToggleZoom = document.getElementById('btnToggleZoom');
-    btnToggleZoom.addEventListener('click', () => {
-      document.body.classList.toggle('zoom-large');
-      const isLarge = document.body.classList.contains('zoom-large');
-      btnToggleZoom.textContent = isLarge ? 'Large Scale (Camera)' : 'Normal Scale';
-      renderGrid();
-    });
+    const zoomStatusText = document.getElementById('zoomStatusText');
+    if (btnToggleZoom) {
+      btnToggleZoom.addEventListener('click', () => {
+        document.body.classList.toggle('zoom-large');
+        const isLarge = document.body.classList.contains('zoom-large');
+        if (zoomStatusText) {
+          zoomStatusText.textContent = isLarge ? 'Large (Camera)' : 'Normal';
+        }
+        renderGrid();
+      });
+    }
 
     // Initial load
     loadProducts();
