@@ -140,7 +140,13 @@ This project was developed for our school programming course to show how a funct
 - Modern web browser (Chrome, Edge, Firefox, Brave)
 - *No pip packages required.*
 
-### Step 1: Run the Web Version (Recommended)
+### Quickest Way: One-Click Windows Launcher (.bat)
+Simply double-click **`start_pos.bat`** in the project folder. It will:
+1. Automatically detect your Python executable (even if not in system PATH).
+2. Start the HTTP server on port 8000.
+3. Automatically launch your default browser to `http://localhost:8000`.
+
+### Manual Step 1: Run the Web Version
 
 1. Open your terminal in the project directory:
    ```bash
@@ -151,7 +157,7 @@ This project was developed for our school programming course to show how a funct
    http://localhost:8000
    ```
 
-### Step 2: Run the CLI Terminal Menu
+### Manual Step 2: Run the CLI Terminal Menu
 
 If you want to use the text-based command prompt interface:
 ```bash
@@ -164,6 +170,14 @@ Menu options:
 - `[4]` Update Product Stock
 - `[5]` View Sales Summary & KPIs
 - `[6]` Launch Web Server
+
+### Authentic Philippine Retail Catalog & Live Scraping
+
+The system features real-world Philippine FMCG products (Lucky Me!, Jack 'n Jill Nova/Piattos/Chippy, SkyFlakes, Century Tuna, Kopiko, San Miguel, Datu Puti, Silver Swan, etc.) with official GS1 EAN-13 barcodes (`480...`).
+
+- **Live Auto-Scraping**: Scanning any unknown real-world retail barcode automatically queries the master GS1 / Open Food Facts database, auto-registers product details and estimated PHP SRP into [products.json](file:///c:/Users/keith/Desktop/pytttt/products.json), and adds it immediately to the cart.
+- **Re-seeding Catalog**: Run `python seed_ph_catalog.py` anytime to restore the 30-item Philippine supermarket master database.
+- **Barcode Test Sheet**: Visit `http://localhost:8000/barcodes.html` to view, test, copy, or print scannable Code-128 barcode cards for all products.
 
 ---
 

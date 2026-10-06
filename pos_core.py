@@ -246,8 +246,8 @@ def save_products(products):
         save_products_unlocked(products)
 
 
-def find_product_by_barcode(code):
-    """Find a product matching barcode, SKU, or ID (exact, case-insensitive, or relaxed)."""
+def find_product_by_barcode(code, auto_scrape=True):
+    """Find a product matching barcode, SKU, or ID (exact, case-insensitive, or auto-scrapes retail master catalog)."""
     if code is None:
         return None
     code_str = str(code).strip()
@@ -280,6 +280,24 @@ def find_product_by_barcode(code):
             return p
         if bc and len(code_str) >= 4 and (code_str.endswith(bc) or bc.endswith(code_str)):
             return p
+
+    # 4. Live Master Catalog Online Scraper (Auto-discovers real retail packaging)
+    if auto_scrape and len(code_str) >= 6 and code_str.isdigit():
+        try:
+            import ph_catalog_master
+            meta = ph_catalog_master.scrape_barcode_metadata(code_str)
+            if meta and meta.get("name"):
+                est_price = ph_catalog_master.estimate_retail_price(meta["name"], meta.get("category", ""))
+                new_item = add_product(
+                    name=meta["name"],
+                    price=est_price,
+                    stock=50,
+                    category=meta.get("category", "Supermarket Goods"),
+                    barcode=code_str
+                )
+                return new_item
+        except Exception:
+            pass
 
     return None
 
