@@ -117,7 +117,7 @@ const DOM = {
   topbarCashierName: document.getElementById('topbarCashierName'),
   checkoutCashierInput: document.getElementById('checkoutCashierInput'),
 
-  // Barcode Lookup & Phone Camera Scanner
+  // Barcode Lookup & Hands-Free Mall Scanner
   barcodeModal: document.getElementById('barcodeModal'),
   barcodeModalCard: document.getElementById('barcodeModalCard'),
   barcodeManualInput: document.getElementById('barcodeManualInput'),
@@ -135,6 +135,24 @@ const DOM = {
   btnPhoneSnapBarcode: document.getElementById('btnPhoneSnapBarcode'),
   phoneUrlDisplay: document.getElementById('phoneUrlDisplay'),
   btnCopyPhoneUrl: document.getElementById('btnCopyPhoneUrl'),
+
+  // Mall Scanner Master Controls
+  btnToggleMallScanner: document.getElementById('btnToggleMallScanner'),
+  mallScannerSwitchPip: document.getElementById('mallScannerSwitchPip'),
+  mallScannerStateText: document.getElementById('mallScannerStateText'),
+  modalScannerPip: document.getElementById('modalScannerPip'),
+  telemetryScannerToggle: document.getElementById('telemetryScannerToggle'),
+  telemetryScannerPip: document.getElementById('telemetryScannerPip'),
+  telemetryScannerText: document.getElementById('telemetryScannerText'),
+  dockedMallScanner: document.getElementById('dockedMallScanner'),
+  dockedScannerVisor: document.getElementById('dockedScannerVisor'),
+  mallDockedVideo: document.getElementById('mallDockedVideo'),
+  btnSwitchCamera: document.getElementById('btnSwitchCamera'),
+  btnCloseDockedScanner: document.getElementById('btnCloseDockedScanner'),
+  scannerLastScanned: document.getElementById('scannerLastScanned'),
+  scannedItemName: document.getElementById('scannedItemName'),
+  scannedItemPrice: document.getElementById('scannedItemPrice'),
+  mallScanCount: document.getElementById('mallScanCount'),
 
   // Scannable Barcode Elements & Label Modal
   sampleBarcodeSvg: document.getElementById('sampleBarcodeSvg'),
@@ -272,6 +290,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupEventListeners();
   setupBarcodeWedgeScanner();
   startStorageSyncDaemon();
+  if (localStorage.getItem('pos_mall_scanner_active') === 'true') {
+    setMallScannerState(true);
+  }
 });
 
 // --- Currency & Formatting Helpers ---
@@ -1345,6 +1366,11 @@ async function resolveBarcodeScan(code) {
   if (product) {
     addToCart(product);
     showToast(`Added to cart: ${product.name} (₱${Number(product.price).toFixed(2)})`, false, true);
+    if (DOM.scannerLastScanned && DOM.scannedItemName && DOM.scannedItemPrice) {
+      DOM.scannedItemName.textContent = product.name;
+      DOM.scannedItemPrice.textContent = `₱${Number(product.price).toFixed(2)}`;
+      DOM.scannerLastScanned.style.display = 'flex';
+    }
   } else {
     showToast(`Barcode "${cleanCode}" not found in catalog.`, true);
   }
@@ -1354,16 +1380,18 @@ function handleManualBarcodeLookup() {
   const code = DOM.barcodeManualInput.value.trim();
   if (!code) return;
 
-  stopCameraScanner();
   resolveBarcodeScan(code);
   DOM.barcodeManualInput.value = '';
-  closeModal(DOM.barcodeModal, DOM.barcodeModalCard);
 }
 
-// --- Phone / Webcam Camera Barcode Scanner Subsystem ---
+// --- Hands-Free Mall Barcode Scanner Subsystem ---
 let cameraMediaStream = null;
 let cameraScanInterval = null;
 let isScanningActive = false;
+let currentCameraFacing = 'environment';
+let lastScannedBarcode = '';
+let lastScannedTime = 0;
+let totalMallScans = 0;
 let zxingMultiReader = null;
 let zxingHints = null;
 
@@ -1373,7 +1401,7 @@ const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
 const cropCanvas = document.createElement('canvas');
 const cropCtx = cropCanvas.getContext('2d', { willReadFrequently: true });
 
-// Audio beep for instant POS scanner feedback
+// Authentic supermarket checkout chime (1850Hz sine pulse)
 function playScanBeep() {
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -1382,37 +1410,74 @@ function playScanBeep() {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(1760, ctx.currentTime);
-    gain.gain.setValueAtTime(0.18, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
+    osc.frequency.setValueAtTime(1850, ctx.currentTime);
+    gain.gain.setValueAtTime(0.24, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.09);
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start();
-    osc.stop(ctx.currentTime + 0.12);
+    osc.stop(ctx.currentTime + 0.09);
   } catch (e) {}
+}
+
+function triggerVisorFlash() {
+  if (DOM.dockedScannerVisor) {
+    DOM.dockedScannerVisor.classList.add('scan-flash');
+    setTimeout(() => {
+      DOM.dockedScannerVisor.classList.remove('scan-flash');
+    }, 250);
+  }
+  if (DOM.cameraScannerReticle) {
+    DOM.cameraScannerReticle.style.borderColor = '#10B981';
+    DOM.cameraScannerReticle.style.borderStyle = 'solid';
+    setTimeout(() => {
+      DOM.cameraScannerReticle.style.borderColor = '#38BDF8';
+      DOM.cameraScannerReticle.style.borderStyle = 'dashed';
+    }, 250);
+  }
 }
 
 function onSuccessfulScan(scannedCode) {
   if (!scannedCode) return;
-  isScanningActive = false;
+
+  const now = Date.now();
+  // Throttle: 1.4s for identical barcode, 350ms for different product
+  if (scannedCode === lastScannedBarcode && (now - lastScannedTime) < 1400) {
+    return;
+  }
+  if (scannedCode !== lastScannedBarcode && (now - lastScannedTime) < 350) {
+    return;
+  }
+  lastScannedBarcode = scannedCode;
+  lastScannedTime = now;
+
   playScanBeep();
   if (navigator.vibrate) {
-    try { navigator.vibrate(80); } catch(e) {}
+    try { navigator.vibrate(60); } catch(e) {}
   }
-  stopCameraScanner();
-  closeModal(DOM.barcodeModal, DOM.barcodeModalCard);
+
+  triggerVisorFlash();
   resolveBarcodeScan(scannedCode);
+
+  totalMallScans++;
+  if (DOM.mallScanCount) {
+    DOM.mallScanCount.textContent = `${totalMallScans} scanned`;
+  }
 }
 
 function decodeVideoFrame() {
-  if (!isScanningActive || !DOM.cameraScannerVideo) return;
-  const v = DOM.cameraScannerVideo;
-  if (v.readyState < 2 || v.videoWidth < 20 || v.videoHeight < 20) return;
+  if (!isScanningActive) return;
+
+  // Pick active video source (docked visor or modal video)
+  const v = (DOM.mallDockedVideo && DOM.mallDockedVideo.readyState >= 2 && DOM.mallDockedVideo.videoWidth > 20)
+    ? DOM.mallDockedVideo
+    : DOM.cameraScannerVideo;
+
+  if (!v || v.readyState < 2 || v.videoWidth < 20 || v.videoHeight < 20) return;
 
   const vw = v.videoWidth;
   const vh = v.videoHeight;
 
-  // 1. Draw full camera frame
   if (scanCanvas.width !== vw || scanCanvas.height !== vh) {
     scanCanvas.width = vw;
     scanCanvas.height = vh;
@@ -1437,7 +1502,6 @@ function decodeVideoFrame() {
       ]);
     }
 
-    // Try full frame
     try {
       const lum = new ZXing.HTMLCanvasElementLuminanceSource(scanCanvas);
       const bin = new ZXing.HybridBinarizer(lum);
@@ -1452,7 +1516,7 @@ function decodeVideoFrame() {
       }
     } catch (e) {}
 
-    // Try center-cropped viewfinder region (zooms in on barcode, removes glare/borders)
+    // Viewfinder region crop
     try {
       const cropW = Math.floor(vw * 0.70);
       const cropH = Math.floor(vh * 0.55);
@@ -1479,6 +1543,61 @@ function decodeVideoFrame() {
   }
 }
 
+async function setMallScannerState(enable, switchFacing = false) {
+  if (switchFacing) {
+    currentCameraFacing = currentCameraFacing === 'environment' ? 'user' : 'environment';
+  }
+
+  if (enable) {
+    AppState.mallScannerActive = true;
+    localStorage.setItem('pos_mall_scanner_active', 'true');
+    updateMallScannerUI(true);
+    await startCameraScanner();
+  } else {
+    AppState.mallScannerActive = false;
+    localStorage.setItem('pos_mall_scanner_active', 'false');
+    updateMallScannerUI(false);
+    stopCameraScanner();
+  }
+}
+
+function updateMallScannerUI(active) {
+  if (DOM.btnToggleMallScanner) {
+    DOM.btnToggleMallScanner.classList.toggle('active', active);
+  }
+  if (DOM.mallScannerSwitchPip) {
+    DOM.mallScannerSwitchPip.classList.toggle('active', active);
+  }
+  if (DOM.mallScannerStateText) {
+    DOM.mallScannerStateText.textContent = active ? 'ON' : 'OFF';
+  }
+
+  if (DOM.telemetryScannerToggle) {
+    DOM.telemetryScannerToggle.classList.toggle('active', active);
+    DOM.telemetryScannerToggle.classList.toggle('inactive', !active);
+  }
+  if (DOM.telemetryScannerPip) {
+    DOM.telemetryScannerPip.classList.toggle('active', active);
+  }
+  if (DOM.telemetryScannerText) {
+    DOM.telemetryScannerText.textContent = active ? 'Scanner LIVE' : 'Scanner OFF';
+  }
+
+  if (DOM.btnToggleCameraScanner) {
+    DOM.btnToggleCameraScanner.classList.toggle('active', active);
+  }
+  if (DOM.modalScannerPip) {
+    DOM.modalScannerPip.classList.toggle('active', active);
+  }
+  if (DOM.btnToggleCameraText) {
+    DOM.btnToggleCameraText.textContent = active ? 'Scanner: ON' : 'Scanner: OFF';
+  }
+
+  if (DOM.dockedMallScanner) {
+    DOM.dockedMallScanner.style.display = active ? 'block' : 'none';
+  }
+}
+
 async function startCameraScanner() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     showToast('Camera API is not supported on this device/browser.', true);
@@ -1486,37 +1605,44 @@ async function startCameraScanner() {
   }
 
   try {
-    if (DOM.btnToggleCameraText) DOM.btnToggleCameraText.textContent = 'Starting Camera...';
+    if (cameraMediaStream) {
+      cameraMediaStream.getTracks().forEach(track => track.stop());
+    }
 
     cameraMediaStream = await navigator.mediaDevices.getUserMedia({
       video: {
-        facingMode: { ideal: 'environment' },
+        facingMode: { ideal: currentCameraFacing },
         width: { ideal: 1280 },
         height: { ideal: 720 }
       }
     });
 
+    if (DOM.mallDockedVideo) {
+      DOM.mallDockedVideo.srcObject = cameraMediaStream;
+      DOM.mallDockedVideo.play().catch(() => {});
+    }
+
     if (DOM.cameraScannerVideo) {
       DOM.cameraScannerVideo.srcObject = cameraMediaStream;
       DOM.cameraScannerVideo.style.display = 'block';
-      await DOM.cameraScannerVideo.play();
+      DOM.cameraScannerVideo.play().catch(() => {});
     }
 
     if (DOM.cameraScannerReticle) DOM.cameraScannerReticle.style.display = 'block';
     if (DOM.barcodeDefaultPlaceholder) DOM.barcodeDefaultPlaceholder.style.display = 'none';
-    if (DOM.btnToggleCameraText) DOM.btnToggleCameraText.textContent = 'Stop Phone Camera';
     if (DOM.barcodeScannerStatusNote) {
-      DOM.barcodeScannerStatusNote.textContent = 'Camera active. Point at barcode to scan.';
+      DOM.barcodeScannerStatusNote.textContent = 'Mall Scanner active. Swipe barcodes across camera.';
     }
 
     isScanningActive = true;
+    updateMallScannerUI(true);
 
     if (cameraScanInterval) clearInterval(cameraScanInterval);
     cameraScanInterval = setInterval(decodeVideoFrame, 90);
 
   } catch (err) {
     console.warn('Camera access denied or unavailable:', err);
-    showToast('Camera error: ' + (err.message || 'Permission denied'), true);
+    showToast('Camera access denied or unavailable.', true);
     stopCameraScanner();
   }
 }
@@ -1533,6 +1659,10 @@ function stopCameraScanner() {
     } catch (e) {}
     cameraMediaStream = null;
   }
+  if (DOM.mallDockedVideo) {
+    try { DOM.mallDockedVideo.pause(); } catch(e) {}
+    DOM.mallDockedVideo.srcObject = null;
+  }
   if (DOM.cameraScannerVideo) {
     try { DOM.cameraScannerVideo.pause(); } catch(e) {}
     DOM.cameraScannerVideo.srcObject = null;
@@ -1544,20 +1674,14 @@ function stopCameraScanner() {
   if (DOM.barcodeDefaultPlaceholder) {
     DOM.barcodeDefaultPlaceholder.style.display = 'flex';
   }
-  if (DOM.btnToggleCameraText) {
-    DOM.btnToggleCameraText.textContent = 'Start Phone Camera';
-  }
   if (DOM.barcodeScannerStatusNote) {
     DOM.barcodeScannerStatusNote.textContent = 'Literal scannable barcode ready. Use camera, laser wedge, or click sample to test.';
   }
+  updateMallScannerUI(false);
 }
 
 function toggleCameraScanner() {
-  if (isScanningActive || cameraMediaStream || cameraScanInterval) {
-    stopCameraScanner();
-  } else {
-    startCameraScanner();
-  }
+  setMallScannerState(!isScanningActive);
 }
 
 async function handlePhoneImageSnap(file) {
@@ -2545,15 +2669,7 @@ function setupEventListeners() {
     }
     if (e.key === 'F3') {
       e.preventDefault();
-      stopCameraScanner();
-      const currentProd = AppState.products[0];
-      if (currentProd) {
-        populateBarcodeProductDropdown(currentProd.barcode || currentProd.id);
-        renderScannableBarcodePreview(currentProd.barcode || currentProd.id, currentProd.name, currentProd.price);
-        if (DOM.barcodeManualInput) DOM.barcodeManualInput.value = currentProd.barcode || currentProd.id;
-      }
-      openModal(DOM.barcodeModal, DOM.barcodeModalCard);
-      setTimeout(() => DOM.barcodeManualInput && DOM.barcodeManualInput.focus(), 100);
+      setMallScannerState(!isScanningActive);
     }
     if (e.key === 'F1' || (e.shiftKey && e.key === '?')) {
       e.preventDefault();
@@ -2572,7 +2688,9 @@ function setupEventListeners() {
       }
     }
     if (e.key === 'Escape') {
-      stopCameraScanner();
+      if (!AppState.mallScannerActive) {
+        stopCameraScanner();
+      }
       if (DOM.ticketPane && DOM.ticketPane.classList.contains('mobile-open')) {
         DOM.ticketPane.classList.remove('mobile-open');
       }
@@ -2651,9 +2769,33 @@ function setupEventListeners() {
   DOM.btnCancelModifier.addEventListener('click', () => closeModal(DOM.modifierModal, DOM.modifierModalCard));
   DOM.btnCloseModifier.addEventListener('click', () => closeModal(DOM.modifierModal, DOM.modifierModalCard));
 
+  // Hands-Free Mall Scanner Controls
+  if (DOM.btnToggleMallScanner) {
+    DOM.btnToggleMallScanner.addEventListener('click', () => {
+      setMallScannerState(!isScanningActive);
+    });
+  }
+
+  if (DOM.telemetryScannerToggle) {
+    DOM.telemetryScannerToggle.addEventListener('click', () => {
+      setMallScannerState(!isScanningActive);
+    });
+  }
+
+  if (DOM.btnCloseDockedScanner) {
+    DOM.btnCloseDockedScanner.addEventListener('click', () => {
+      setMallScannerState(false);
+    });
+  }
+
+  if (DOM.btnSwitchCamera) {
+    DOM.btnSwitchCamera.addEventListener('click', () => {
+      setMallScannerState(true, true);
+    });
+  }
+
   // Barcode modal & Camera Scanner
   DOM.btnOpenBarcodeModal.addEventListener('click', () => {
-    stopCameraScanner();
     const currentProd = AppState.products[0];
     if (currentProd) {
       populateBarcodeProductDropdown(currentProd.barcode || currentProd.id);
@@ -2667,7 +2809,6 @@ function setupEventListeners() {
   });
 
   DOM.btnCloseBarcode.addEventListener('click', () => {
-    stopCameraScanner();
     closeModal(DOM.barcodeModal, DOM.barcodeModalCard);
   });
   DOM.btnSubmitBarcode.addEventListener('click', handleManualBarcodeLookup);
@@ -2927,7 +3068,9 @@ function setupEventListeners() {
     if (!modal) return;
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
-        if (modal === DOM.barcodeModal) stopCameraScanner();
+        if (modal === DOM.barcodeModal && !AppState.mallScannerActive) {
+          stopCameraScanner();
+        }
         const card = modal.querySelector('.modal-card') || modal.querySelector('.console-container');
         closeModal(modal, card);
       }

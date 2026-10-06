@@ -27,13 +27,13 @@
 
       <!-- Hardware & Storage Diagnostic Telemetry -->
       <div class="header-telemetry-dock">
-        <div class="telemetry-pill telemetry-scanner" title="Hardware barcode reader & camera listener active">
-          <span class="telemetry-live-pip"></span>
+        <button class="telemetry-pill telemetry-scanner telemetry-scanner-toggle" id="telemetryScannerToggle" type="button" title="Click to Toggle Hands-Free Mall Scanner Mode (F3)">
+          <span class="telemetry-live-pip" id="telemetryScannerPip"></span>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 5v4m18-4v4M3 19v-4m18 4v-4M7 9v6m4-6v6m4-6v6"></path>
           </svg>
-          <span class="telemetry-label">Barcode Ready</span>
-        </div>
+          <span class="telemetry-label" id="telemetryScannerText">Scanner OFF</span>
+        </button>
 
         <button class="telemetry-pill telemetry-sync-btn" id="btnManualSync" title="Sync live with JSON storage & Python backend">
           <svg id="syncIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -86,13 +86,23 @@
           <span class="terminal-header-badge" id="parkedOrderCount">0</span>
         </button>
 
-        <!-- Quick Scan Trigger -->
-        <button class="terminal-header-btn terminal-header-btn-secondary" id="btnOpenBarcodeModal" title="Manual Barcode / QR Lookup (F3)">
+        <!-- Hands-Free Mall Barcode Scanner Master Toggle -->
+        <button class="terminal-header-btn terminal-header-btn-secondary scanner-master-toggle" id="btnToggleMallScanner" type="button" title="Toggle Hands-Free Mall Barcode Scanner (F3) - Always-On Cashier Mode">
+          <span class="scanner-switch-pip" id="mallScannerSwitchPip"></span>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 5v4m18-4v4M3 19v-4m18 4v-4M7 9v6m4-6v6m4-6v6"></path>
           </svg>
-          <span>Scan</span>
+          <span>Scanner: <strong id="mallScannerStateText">OFF</strong></span>
           <kbd class="terminal-header-kbd">F3</kbd>
+        </button>
+
+        <button class="terminal-header-btn terminal-header-btn-subtle" id="btnOpenBarcodeModal" type="button" title="Manual Barcode Lookup & SKU Sheet">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="1"></circle>
+            <circle cx="19" cy="12" r="1"></circle>
+            <circle cx="5" cy="12" r="1"></circle>
+          </svg>
+          <span>Lookup</span>
         </button>
 
         <!-- Management Suite Launcher -->
@@ -251,6 +261,46 @@
         <span class="ticket-count-badge" id="cartCountBadge">0 items</span>
       </div>
 
+      <!-- Docked Mall Scanner HUD (Continuous Hands-Free Scanner) -->
+      <div class="docked-mall-scanner" id="dockedMallScanner" style="display: none;">
+        <div class="docked-scanner-visor" id="dockedScannerVisor">
+          <video id="mallDockedVideo" playsinline autoplay muted></video>
+          <div class="scanner-laser-line"></div>
+          <div class="scanner-reticle-box"></div>
+          
+          <div class="scanner-visor-overlay">
+            <div class="scanner-live-badge">
+              <span class="live-dot pulse"></span>
+              <span>MALL SCANNER LIVE</span>
+            </div>
+            <div class="scanner-controls-strip">
+              <button type="button" class="visor-btn" id="btnSwitchCamera" title="Switch Camera (Front/Rear)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                </svg>
+              </button>
+              <button type="button" class="visor-btn visor-btn-close" id="btnCloseDockedScanner" title="Turn Off Scanner (F3)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Last Scanned Feedback Chip -->
+          <div class="scanner-last-scanned" id="scannerLastScanned" style="display: none;">
+            <span class="scanned-check">✓</span>
+            <span class="scanned-name" id="scannedItemName">Lucky Me! Pancit Canton</span>
+            <span class="scanned-price" id="scannedItemPrice">₱17.00</span>
+          </div>
+        </div>
+        <div class="docked-scanner-footer">
+          <span class="footer-hint">Continuous swipe &bull; Auto-adds to cart</span>
+          <span class="footer-count" id="mallScanCount">0 scanned</span>
+        </div>
+      </div>
+
       <div class="cart-items-container" id="cartItemsContainer">
         <div class="cart-empty-state" id="cartEmptyState">
           <svg class="cart-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -367,16 +417,17 @@
           </div>
         </div>
 
-        <div style="display: flex; gap: 8px; margin-top: 12px; margin-bottom: 16px;">
-          <button type="button" class="btn btn-secondary" id="btnToggleCameraScanner" style="flex: 1; font-size: 12px; padding: 8px 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-              <circle cx="12" cy="13" r="4"></circle>
-            </svg>
-            <span id="btnToggleCameraText">Start Phone Camera</span>
+        <div class="mall-modal-toggle-row">
+          <div class="mall-toggle-info">
+            <span class="mall-toggle-title">Hands-Free Mall Scanner</span>
+            <span class="mall-toggle-sub">Continuous live camera &bull; Auto-adds to cart</span>
+          </div>
+          <button type="button" class="mall-toggle-action-btn" id="btnToggleCameraScanner">
+            <span class="scanner-switch-pip" id="modalScannerPip"></span>
+            <span id="btnToggleCameraText">Scanner: OFF</span>
           </button>
           <input type="file" id="phoneCameraFileInput" accept="image/*" capture="environment" style="display: none;">
-          <button type="button" class="btn btn-secondary" id="btnPhoneSnapBarcode" title="Snap a photo of barcode" style="font-size: 12px; padding: 8px 12px;">
+          <button type="button" class="btn btn-secondary" id="btnPhoneSnapBarcode" title="Snap photo of barcode" style="font-size: 11.5px; padding: 6px 10px; display: none;">
             Snap Photo
           </button>
         </div>
