@@ -201,6 +201,8 @@ def reset_line_to_column_0():
 
 def send_char(char):
     """Sends a single character via Unicode input, handling newlines and tabs."""
+    if char == "\r":
+        return
     if char == "\n":
         press_key(VK_RETURN)
         time.sleep(0.02)
