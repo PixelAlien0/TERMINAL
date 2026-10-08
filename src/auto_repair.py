@@ -56,6 +56,7 @@ VK_RIGHT = 0x27
 VK_DOWN = 0x28
 VK_DELETE = 0x2E
 VK_F9 = 0x78
+VK_MULTIPLY = 0x6A  # Numeric keypad '*' (Asterisk)
 
 # SendInput C Structs
 class MOUSEINPUT(ctypes.Structure):
@@ -472,7 +473,7 @@ def perform_human_repair():
 def run_daemon(watch_mode=False):
     """
     Runs in the background:
-    - Listens for [F9] hotkey to trigger repair on demand.
+    - Listens for [Ctrl + Keypad *] hotkey to trigger repair on demand.
     - If watch_mode=True, also triggers when pos_system.py is saved with errors.
     """
     print("=" * 65)
@@ -480,8 +481,8 @@ def run_daemon(watch_mode=False):
     print("=" * 65)
     print(f"[*] Monitored Target : {TARGET_FILE}")
     print(f"[*] Golden Reference : {GOLDEN_FILE}")
-    print(f"[*] Hotkey Trigger   : Press [F9] anytime to trigger human repair")
-    print(f"[*] Auto-Watch Mode  : {'ENABLED' if watch_mode else 'DISABLED (Use [F9])'}")
+    print(f"[*] Hotkey Trigger   : Press [Ctrl + Keypad *] anytime to trigger human repair")
+    print(f"[*] Auto-Watch Mode  : {'ENABLED' if watch_mode else 'DISABLED (Use [Ctrl + Keypad *])'}")
     print("=" * 65)
     print("\nWaiting for trigger... (Press Ctrl+C to exit)\n")
 
@@ -489,12 +490,14 @@ def run_daemon(watch_mode=False):
 
     try:
         while True:
-            # Check F9 hotkey state
-            # GetAsyncKeyState returns highest bit set if key is currently down
-            f9_state = user32.GetAsyncKeyState(VK_F9)
-            if f9_state & 0x8000:
-                print("\n[>>] [F9] HOTKEY PRESSED! Starting human-typing auto-repair...")
-                time.sleep(0.3)  # Wait for key release
+            # Check Ctrl + Keypad Asterisk hotkey state
+            # GetAsyncKeyState returns highest bit set (0x8000) if key is currently down
+            ctrl_down = bool(user32.GetAsyncKeyState(VK_CONTROL) & 0x8000)
+            numpad_mult_down = bool(user32.GetAsyncKeyState(VK_MULTIPLY) & 0x8000)
+
+            if ctrl_down and numpad_mult_down:
+                print("\n[>>] [Ctrl + Keypad *] HOTKEY PRESSED! Starting human-typing auto-repair...")
+                time.sleep(0.35)  # Wait for keys to release
                 perform_human_repair()
                 print("\nResuming standby mode. Waiting for next trigger...")
                 time.sleep(1.0)
@@ -532,5 +535,5 @@ if __name__ == "__main__":
         # Daemon with auto-watch on file save
         run_daemon(watch_mode=True)
     else:
-        # Standard background daemon with F9 hotkey listener
+        # Standard background daemon with Ctrl + Keypad * hotkey listener
         run_daemon(watch_mode=False)
