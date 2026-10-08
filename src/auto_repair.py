@@ -100,6 +100,24 @@ class INPUT(ctypes.Structure):
         ("union", INPUT_UNION),
     ]
 
+# Low-Level Keyboard Hook Definitions (WH_KEYBOARD_LL)
+class KBDLLHOOKSTRUCT(ctypes.Structure):
+    _fields_ = [
+        ("vkCode", wintypes.DWORD),
+        ("scanCode", wintypes.DWORD),
+        ("flags", wintypes.DWORD),
+        ("time", wintypes.DWORD),
+        ("dwExtraInfo", ctypes.c_void_p),
+    ]
+
+HOOKPROC = ctypes.WINFUNCTYPE(ctypes.c_longlong, ctypes.c_int, wintypes.WPARAM, ctypes.POINTER(KBDLLHOOKSTRUCT))
+WH_KEYBOARD_LL = 13
+LLKHF_INJECTED = 0x10
+WM_KEYDOWN = 0x0100
+WM_KEYUP = 0x0101
+WM_SYSKEYDOWN = 0x0104
+WM_SYSKEYUP = 0x0105
+
 
 def _send_input(inputs):
     n = len(inputs)
@@ -464,6 +482,122 @@ class HumanTyper:
 
 
 # -------------------------------------------------------------
+# HackerTyper Simulation: Mashing Random Keys Types the Real Fix
+# -------------------------------------------------------------
+class HackerTyper:
+    def __init__(self, target_text):
+        self.text = target_text
+        self.index = 0
+        self.total_len = len(target_text)
+        self.finished = (self.total_len == 0)
+        self.last_input_time = time.time()
+
+    def emit_next_chunk(self):
+        """Emits the next 1 to 3 characters of the target code into the editor."""
+        if self.index >= self.total_len:
+            self.finished = True
+            return
+
+        # At newline, emit newline alone so the line break looks deliberate
+        if self.text[self.index] == "\n":
+            chunk = "\n"
+            self.index += 1
+        elif self.text[self.index] in " \t":
+            # Indent / space: emit space plus next char if not newline
+            if self.index + 1 < self.total_len and self.text[self.index + 1] != "\n":
+                chunk = self.text[self.index:self.index + 2]
+                self.index += 2
+            else:
+                chunk = self.text[self.index]
+                self.index += 1
+        else:
+            # 1 to 3 characters of code per keystroke
+            chunk_len = random.choice([1, 2, 2, 3])
+            # Don't cut past newline
+            nl_pos = self.text.find("\n", self.index, self.index + chunk_len)
+            if nl_pos != -1:
+                chunk_len = max(1, nl_pos - self.index)
+            chunk = self.text[self.index:self.index + chunk_len]
+            self.index += len(chunk)
+
+        for ch in chunk:
+            send_char(ch)
+            time.sleep(0.01)
+
+        if self.index >= self.total_len:
+            self.finished = True
+
+
+def type_with_hacker_mode(target_text, auto_fallback_seconds=12.0):
+    """
+    HackerTyper engine:
+    Intercepts any random physical key the person mashes on the keyboard,
+    eats the physical key, and types the next chunk (1-3 chars) of the real fix!
+    """
+    if not target_text:
+        return
+
+    typer = HackerTyper(target_text)
+    cb_holder = []
+
+    def hook_proc(nCode, wParam, lParam):
+        if nCode >= 0 and lParam:
+            flags = lParam.contents.flags
+            # If injected by SendInput, let it pass through to the editor!
+            if flags & LLKHF_INJECTED:
+                return user32.CallNextHookEx(None, nCode, wParam, lParam)
+
+            vk = lParam.contents.vkCode
+
+            # Escape key cancels HackerTyper immediately
+            if vk == VK_ESCAPE:
+                typer.finished = True
+                return user32.CallNextHookEx(None, nCode, wParam, lParam)
+
+            # Standalone modifier keys (Shift, Ctrl, Alt, CapsLock) pass through
+            if vk in (VK_SHIFT, 0xA0, 0xA1, VK_CONTROL, 0xA2, 0xA3, VK_MENU, 0xA4, 0xA5, 0x14):
+                return user32.CallNextHookEx(None, nCode, wParam, lParam)
+
+            # Physical key down: swallow the key and emit the next real code chunk!
+            if wParam in (WM_KEYDOWN, WM_SYSKEYDOWN):
+                typer.last_input_time = time.time()
+                typer.emit_next_chunk()
+                return 1
+
+            # Physical key up: swallow key up so Windows doesn't echo it
+            if wParam in (WM_KEYUP, WM_SYSKEYUP):
+                return 1
+
+        return user32.CallNextHookEx(None, nCode, wParam, lParam)
+
+    hook_func = HOOKPROC(hook_proc)
+    cb_holder.append(hook_func)
+    hhook = user32.SetWindowsHookExW(WH_KEYBOARD_LL, hook_func, None, 0)
+
+    try:
+        msg = wintypes.MSG()
+        start_time = time.time()
+        while not typer.finished:
+            # Process Windows message queue so hook dispatches smoothly
+            while user32.PeekMessageW(ctypes.byref(msg), None, 0, 0, 1):  # PM_REMOVE = 1
+                user32.TranslateMessage(ctypes.byref(msg))
+                user32.DispatchMessageW(ctypes.byref(msg))
+
+            # Auto-advance fallback if user stops typing for > auto_fallback_seconds
+            now = time.time()
+            if (now - typer.last_input_time) > auto_fallback_seconds and (now - start_time) > auto_fallback_seconds:
+                typer.emit_next_chunk()
+                time.sleep(random.uniform(0.12, 0.22))
+
+            time.sleep(0.01)
+
+    finally:
+        if hhook:
+            user32.UnhookWindowsHookEx(hhook)
+        time.sleep(0.15)
+
+
+# -------------------------------------------------------------
 # Main Repair Workflow
 # -------------------------------------------------------------
 def perform_human_repair():
@@ -472,8 +606,9 @@ def perform_human_repair():
     1. Diagnoses error & diff in pos_system.py
     2. Brings editor to foreground & starts subtle mouse wanderer
     3. Jumps directly to exact line (assuming file already open)
-    4. Deletes broken code & types replacement with human cadence
-    5. Saves file and halts mouse wanderer cleanly
+    4. Deletes broken code
+    5. Activates HackerTyper mode: mash any random keys on keyboard to type real fix!
+    6. Saves file and halts cleanly
     """
     print("\n" + "=" * 65)
     print("  [AUTO-REPAIR] Initiating diagnostic scan on pos_system.py...")
@@ -492,8 +627,8 @@ def perform_human_repair():
     print(f"    Diff Blocks  : {len(diag['diff_blocks'])} mutation(s) found")
 
     print("\n[*] Bringing code editor to front...")
-    print("    (Hands off keyboard & mouse! Just pretend you are typing!)")
-    time.sleep(1.2)
+    print("    (Prepare to mash keys like a hacker!)")
+    time.sleep(1.0)
 
     focus_ide_window()
     time.sleep(0.3)
@@ -520,12 +655,12 @@ def perform_human_repair():
                 if delete_count > 0:
                     print(f"[*] Deleting {delete_count} broken line(s)...")
                     typer.delete_broken_lines(delete_count)
-                    time.sleep(random.uniform(0.40, 0.70))
+                    time.sleep(random.uniform(0.35, 0.55))
 
                 if clean_snippet:
-                    print(f"[*] Typing repair code ({len(clean_snippet)} chars)...")
-                    typer.type_string(clean_snippet)
-                    time.sleep(random.uniform(0.60, 1.00))
+                    print(f"[*] HackerTyper active! Mash any keys to type fix ({len(clean_snippet)} chars)...")
+                    type_with_hacker_mode(clean_snippet)
+                    time.sleep(0.3)
 
                 typer.save_file()
                 time.sleep(0.4)
@@ -540,7 +675,8 @@ def perform_human_repair():
             time.sleep(0.2)
 
             clean_full_text = diag["golden_text"].rstrip("\r\n")
-            typer.type_string(clean_full_text)
+            print(f"[*] HackerTyper active! Mash any keys to type fix ({len(clean_full_text)} chars)...")
+            type_with_hacker_mode(clean_full_text)
             time.sleep(0.3)
             typer.save_file()
 
