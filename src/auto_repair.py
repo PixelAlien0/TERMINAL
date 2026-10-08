@@ -418,8 +418,8 @@ class HumanTyper:
     def delete_broken_lines(self, count):
         """
         Deletes `count` lines starting from the current cursor line
-        using Shift+Down selection, leaving a single empty line at column 0.
-        Does NOT swallow subsequent lines or eat empty lines!
+        by selecting from line start through line `count` end, leaving a single
+        empty line ready for typing without eating subsequent lines.
         """
         if count <= 0:
             return
@@ -428,13 +428,17 @@ class HumanTyper:
         press_key(VK_HOME)
         time.sleep(0.015)
 
-        for _ in range(count):
-            send_combo(VK_SHIFT, VK_DOWN)
-            time.sleep(0.015)
+        if count > 1:
+            for _ in range(count - 1):
+                send_combo(VK_SHIFT, VK_DOWN)
+                time.sleep(0.015)
 
+        send_combo(VK_SHIFT, VK_END)
+        time.sleep(0.015)
         press_key(VK_BACK)
         time.sleep(0.02)
-        reset_line_to_column_0()
+        press_key(VK_HOME)
+        time.sleep(0.01)
 
     def save_file(self):
         """Saves current file with Ctrl+S."""
@@ -594,7 +598,7 @@ def perform_human_repair():
             start_line = i1 + 1
             delete_count = i2 - i1
             clean_lines = diag["golden_lines"][j1:j2]
-            clean_snippet = "".join(clean_lines)
+            clean_snippet = "".join(clean_lines).rstrip("\r\n")
 
             print(f"[*] Navigating directly to Line {start_line}...")
             typer.navigate_to_line(start_line)
