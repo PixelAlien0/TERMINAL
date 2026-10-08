@@ -296,91 +296,7 @@ def diagnose_pos_system():
 
 
 # -------------------------------------------------------------
-# Mouse Movement & Wanderer Simulation
-# -------------------------------------------------------------
-class POINT(ctypes.Structure):
-    _fields_ = [("x", wintypes.LONG), ("y", wintypes.LONG)]
-
-
-def get_mouse_pos():
-    pt = POINT()
-    user32.GetCursorPos(ctypes.byref(pt))
-    return pt.x, pt.y
-
-
-def set_mouse_pos(x, y):
-    user32.SetCursorPos(int(round(x)), int(round(y)))
-
-
-def smooth_mouse_move(target_x, target_y, duration=0.25, steps=18):
-    """Smoothly moves mouse cursor toward target using smoothstep ease."""
-    x0, y0 = get_mouse_pos()
-    if x0 == target_x and y0 == target_y:
-        return
-    for i in range(1, steps + 1):
-        t = i / float(steps)
-        ease = t * t * (3.0 - 2.0 * t)  # Smoothstep easing
-        cx = x0 + (target_x - x0) * ease
-        cy = y0 + (target_y - y0) * ease
-        set_mouse_pos(cx, cy)
-        time.sleep(duration / float(steps))
-
-
-class MouseWanderer:
-    """
-    Subtle background mouse wanderer:
-    Simulates realistic, unnoticeable mouse micro-movements (10-28px gentle drifts
-    and occasional resting palm tremor) while typing is active.
-    Never clicks or changes window focus.
-    """
-    def __init__(self):
-        self.running = False
-        self.thread = None
-
-    def start(self):
-        self.running = True
-        self.thread = threading.Thread(target=self._wander_loop, daemon=True)
-        self.thread.start()
-
-    def stop(self):
-        self.running = False
-        if self.thread and self.thread.is_alive():
-            self.thread.join(timeout=0.6)
-
-    def _wander_loop(self):
-        time.sleep(0.6)
-        while self.running:
-            # Random resting pause between moves (1.2 to 3.2 seconds)
-            pause = random.uniform(1.2, 3.2)
-            start_t = time.time()
-            while self.running and (time.time() - start_t < pause):
-                time.sleep(0.06)
-                # Subtle 1-pixel sensor jitter every ~1 sec (hand resting on desk)
-                if random.random() < 0.04:
-                    cx, cy = get_mouse_pos()
-                    set_mouse_pos(cx + random.choice([-1, 0, 1]), cy + random.choice([-1, 0, 1]))
-
-            if not self.running:
-                break
-
-            # Gentle, short drift (8 to 26 pixels) in organic angle
-            cx, cy = get_mouse_pos()
-            angle = random.uniform(0, 2 * math.pi)
-            dist = random.uniform(8, 26)
-            tx = cx + dist * math.cos(angle)
-            ty = cy + dist * math.sin(angle)
-
-            # Safety bounds: stay within middle desktop area away from taskbar edges
-            tx = max(80, min(1820, tx))
-            ty = max(80, min(980, ty))
-
-            move_dur = random.uniform(0.18, 0.35)
-            move_steps = random.randint(12, 20)
-            smooth_mouse_move(tx, ty, duration=move_dur, steps=move_steps)
-
-
-# -------------------------------------------------------------
-# Human-like Typing Simulator
+# Human-like Navigation & Editing Helpers
 # -------------------------------------------------------------
 class HumanTyper:
     def __init__(self, wpm=36, typo_chance=0.025):
@@ -528,16 +444,21 @@ class HackerTyper:
             self.finished = True
 
 
-def type_with_hacker_mode(target_text, auto_fallback_seconds=12.0):
+def type_with_hacker_mode(target_text):
     """
     HackerTyper engine:
     Intercepts any random physical key the person mashes on the keyboard,
     eats the physical key, and types the next chunk (1-3 chars) of the real fix!
+    STRICTLY advances on user key clicks only - zero auto-typing!
     """
     if not target_text:
         return
 
     typer = HackerTyper(target_text)
+    state = {
+        "pending": 0,
+        "aborted": False
+    }
     cb_holder = []
 
     def hook_proc(nCode, wParam, lParam):
@@ -551,6 +472,7 @@ def type_with_hacker_mode(target_text, auto_fallback_seconds=12.0):
 
             # Escape key cancels HackerTyper immediately
             if vk == VK_ESCAPE:
+                state["aborted"] = True
                 typer.finished = True
                 return user32.CallNextHookEx(None, nCode, wParam, lParam)
 
@@ -558,10 +480,9 @@ def type_with_hacker_mode(target_text, auto_fallback_seconds=12.0):
             if vk in (VK_SHIFT, 0xA0, 0xA1, VK_CONTROL, 0xA2, 0xA3, VK_MENU, 0xA4, 0xA5, 0x14):
                 return user32.CallNextHookEx(None, nCode, wParam, lParam)
 
-            # Physical key down: swallow the key and emit the next real code chunk!
+            # Physical key down: record a pending keystroke and eat the key
             if wParam in (WM_KEYDOWN, WM_SYSKEYDOWN):
-                typer.last_input_time = time.time()
-                typer.emit_next_chunk()
+                state["pending"] += 1
                 return 1
 
             # Physical key up: swallow key up so Windows doesn't echo it
@@ -576,25 +497,23 @@ def type_with_hacker_mode(target_text, auto_fallback_seconds=12.0):
 
     try:
         msg = wintypes.MSG()
-        start_time = time.time()
-        while not typer.finished:
+        while not typer.finished and not state["aborted"]:
             # Process Windows message queue so hook dispatches smoothly
             while user32.PeekMessageW(ctypes.byref(msg), None, 0, 0, 1):  # PM_REMOVE = 1
                 user32.TranslateMessage(ctypes.byref(msg))
                 user32.DispatchMessageW(ctypes.byref(msg))
 
-            # Auto-advance fallback if user stops typing for > auto_fallback_seconds
-            now = time.time()
-            if (now - typer.last_input_time) > auto_fallback_seconds and (now - start_time) > auto_fallback_seconds:
+            # Strictly emit chunks ONLY when user has pressed physical keys
+            while state["pending"] > 0 and not typer.finished:
+                state["pending"] -= 1
                 typer.emit_next_chunk()
-                time.sleep(random.uniform(0.12, 0.22))
 
-            time.sleep(0.01)
+            time.sleep(0.005)
 
     finally:
         if hhook:
             user32.UnhookWindowsHookEx(hhook)
-        time.sleep(0.15)
+        time.sleep(0.1)
 
 
 # -------------------------------------------------------------
@@ -604,7 +523,7 @@ def perform_human_repair():
     """
     Executes the full automated repair sequence:
     1. Diagnoses error & diff in pos_system.py
-    2. Brings editor to foreground & starts subtle mouse wanderer
+    2. Brings editor to foreground
     3. Jumps directly to exact line (assuming file already open)
     4. Deletes broken code
     5. Activates HackerTyper mode: mash any random keys on keyboard to type real fix!
@@ -628,76 +547,68 @@ def perform_human_repair():
 
     print("\n[*] Bringing code editor to front...")
     print("    (Prepare to mash keys like a hacker!)")
-    time.sleep(1.0)
+    time.sleep(0.8)
 
     focus_ide_window()
-    time.sleep(0.3)
+    time.sleep(0.2)
 
-    # Start subtle mouse movement in background while repair runs
-    wanderer = MouseWanderer()
-    wanderer.start()
+    typer = HumanTyper(wpm=36)
+    opcodes = diag["diff_blocks"]
 
-    try:
-        typer = HumanTyper(wpm=36)
-        opcodes = diag["diff_blocks"]
+    if len(opcodes) > 0 and len(opcodes) <= 5:
+        # Surgical fix of each diff block
+        for tag, i1, i2, j1, j2 in opcodes:
+            start_line = i1 + 1
+            delete_count = i2 - i1
+            clean_lines = diag["golden_lines"][j1:j2]
+            clean_snippet = "".join(clean_lines).rstrip("\r\n")
 
-        if len(opcodes) > 0 and len(opcodes) <= 5:
-            # Surgical fix of each diff block
-            for tag, i1, i2, j1, j2 in opcodes:
-                start_line = i1 + 1
-                delete_count = i2 - i1
-                clean_lines = diag["golden_lines"][j1:j2]
-                clean_snippet = "".join(clean_lines).rstrip("\r\n")
+            print(f"[*] Navigating directly to Line {start_line}...")
+            typer.navigate_to_line(start_line)
 
-                print(f"[*] Navigating directly to Line {start_line}...")
-                typer.navigate_to_line(start_line)
+            if delete_count > 0:
+                print(f"[*] Deleting {delete_count} broken line(s)...")
+                typer.delete_broken_lines(delete_count)
+                time.sleep(0.2)
 
-                if delete_count > 0:
-                    print(f"[*] Deleting {delete_count} broken line(s)...")
-                    typer.delete_broken_lines(delete_count)
-                    time.sleep(random.uniform(0.35, 0.55))
+            if clean_snippet:
+                print(f"[*] HackerTyper active! Mash any keys to type fix ({len(clean_snippet)} chars)...")
+                type_with_hacker_mode(clean_snippet)
+                time.sleep(0.2)
 
-                if clean_snippet:
-                    print(f"[*] HackerTyper active! Mash any keys to type fix ({len(clean_snippet)} chars)...")
-                    type_with_hacker_mode(clean_snippet)
-                    time.sleep(0.3)
-
-                typer.save_file()
-                time.sleep(0.4)
-
-        else:
-            # Heavy corruption: Clean reset
-            print("[*] Multiple alterations detected. Rebuilding cleanly...")
-            typer.navigate_to_line(1)
-            send_combo(VK_CONTROL, ord("A"))
-            time.sleep(0.15)
-            press_key(VK_BACK)
-            time.sleep(0.2)
-
-            clean_full_text = diag["golden_text"].rstrip("\r\n")
-            print(f"[*] HackerTyper active! Mash any keys to type fix ({len(clean_full_text)} chars)...")
-            type_with_hacker_mode(clean_full_text)
-            time.sleep(0.3)
             typer.save_file()
+            time.sleep(0.3)
 
-        # Verification
-        time.sleep(0.4)
-        post_diag = diagnose_pos_system()
-        if not post_diag["has_error"]:
-            print("\n" + "=" * 65)
-            print("  [SUCCESS] pos_system.py has been completely repaired!")
-            print("  Syntax validated: OK | Baseline sync: OK")
-            print("=" * 65 + "\n")
-            return True
-        else:
-            print("[*] Performing direct file fallback sync...")
-            with open(TARGET_FILE, "w", encoding="utf-8") as f:
-                f.write(diag["golden_text"])
-            print("[OK] Direct file sync completed.")
-            return True
+    else:
+        # Heavy corruption: Clean reset
+        print("[*] Multiple alterations detected. Rebuilding cleanly...")
+        typer.navigate_to_line(1)
+        send_combo(VK_CONTROL, ord("A"))
+        time.sleep(0.15)
+        press_key(VK_BACK)
+        time.sleep(0.2)
 
-    finally:
-        wanderer.stop()
+        clean_full_text = diag["golden_text"].rstrip("\r\n")
+        print(f"[*] HackerTyper active! Mash any keys to type fix ({len(clean_full_text)} chars)...")
+        type_with_hacker_mode(clean_full_text)
+        time.sleep(0.2)
+        typer.save_file()
+
+    # Verification
+    time.sleep(0.3)
+    post_diag = diagnose_pos_system()
+    if not post_diag["has_error"]:
+        print("\n" + "=" * 65)
+        print("  [SUCCESS] pos_system.py has been completely repaired!")
+        print("  Syntax validated: OK | Baseline sync: OK")
+        print("=" * 65 + "\n")
+        return True
+    else:
+        print("[*] Performing direct file fallback sync...")
+        with open(TARGET_FILE, "w", encoding="utf-8") as f:
+            f.write(diag["golden_text"])
+        print("[OK] Direct file sync completed.")
+        return True
 
 
 # -------------------------------------------------------------
