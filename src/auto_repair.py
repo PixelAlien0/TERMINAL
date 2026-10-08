@@ -280,6 +280,22 @@ def load_golden_source():
         return None
 
 
+def merge_opcodes(opcodes, max_gap=2):
+    """Merges adjacent diff blocks separated by <= max_gap lines into a single cohesive repair block."""
+    if not opcodes:
+        return []
+    merged = [list(opcodes[0])]
+    for tag, i1, i2, j1, j2 in opcodes[1:]:
+        prev = merged[-1]
+        if i1 - prev[2] <= max_gap and j1 - prev[4] <= max_gap:
+            prev[0] = "replace"
+            prev[2] = i2
+            prev[4] = j2
+        else:
+            merged.append([tag, i1, i2, j1, j2])
+    return [tuple(m) for m in merged]
+
+
 def diagnose_pos_system():
     """
     Inspects pos_system.py for syntax errors and diffs against the golden copy.
@@ -294,7 +310,7 @@ def diagnose_pos_system():
         }
     """
     if not os.path.exists(TARGET_FILE):
-        return {"has_error': True, 'error_msg': 'File pos_system.py not found!"}
+        return {"has_error": True, "error_msg": "File pos_system.py not found!"}
 
     with open(TARGET_FILE, "r", encoding="utf-8") as f:
         current_text = f.read()
@@ -315,9 +331,10 @@ def diagnose_pos_system():
         syntax_err = f"{e.msg} at line {e.lineno}"
         syntax_line = e.lineno or 1
 
-    # 2. Check diff against golden baseline
-    matcher = difflib.SequenceMatcher(None, current_lines, golden_lines)
-    opcodes = [op for op in matcher.get_opcodes() if op[0] != "equal"]
+    # 2. Check diff against golden baseline (filtering blank line anchors and merging adjacent fragments)
+    matcher = difflib.SequenceMatcher(lambda s: s.strip() == "", current_lines, golden_lines)
+    raw_opcodes = [op for op in matcher.get_opcodes() if op[0] != "equal"]
+    opcodes = merge_opcodes(raw_opcodes, max_gap=2)
 
     has_error = (syntax_err is not None) or (len(opcodes) > 0)
     primary_line = syntax_line if syntax_err else (opcodes[0][1] + 1 if opcodes else 1)
@@ -438,8 +455,8 @@ class HumanTyper:
     def delete_broken_lines(self, count):
         """
         Deletes `count` lines starting from the current cursor line
-        by selecting from line start through line `count` end, leaving a single
-        empty line ready for typing without eating subsequent lines.
+        by selecting from line start through line `count` end with continuous Shift hold,
+        leaving a single empty line ready for typing without eating subsequent lines.
         """
         if count <= 0:
             return
@@ -448,13 +465,18 @@ class HumanTyper:
         press_key(VK_HOME)
         time.sleep(0.015)
 
+        # Hold Shift continuously to guarantee unbroken selection across all lines
+        key_down(VK_SHIFT)
+        time.sleep(0.01)
         if count > 1:
             for _ in range(count - 1):
-                send_combo(VK_SHIFT, VK_DOWN)
+                press_key(VK_DOWN)
                 time.sleep(0.015)
-
-        send_combo(VK_SHIFT, VK_END)
+        press_key(VK_END)
         time.sleep(0.015)
+        key_up(VK_SHIFT)
+        time.sleep(0.01)
+
         press_key(VK_BACK)
         time.sleep(0.02)
         press_key(VK_HOME)

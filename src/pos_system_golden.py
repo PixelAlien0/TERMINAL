@@ -1,15 +1,19 @@
 import os
 import sys
+import webbrowser
 
+# -------------------------------------------------------------
+# Path & Module Configurations
+# -------------------------------------------------------------
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 _SRC_DIR = os.path.join(_BASE_DIR, "src")
 if os.path.isdir(_SRC_DIR) and _SRC_DIR not in sys.path:
     sys.path.insert(0, _SRC_DIR)
 
-import webbrowser
 import pos_core
 import server
 
+# UTF-8 Console I/O Encodings
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 if hasattr(sys.stderr, "reconfigure"):
@@ -18,9 +22,10 @@ if hasattr(sys.stderr, "reconfigure"):
 STORE_DETAILS = ("Python Point of Sale", "Student Mini-Store")
 
 
-# -------------------------------------------------------------
-# CLI Input Helpers
-# -------------------------------------------------------------
+# =====================================================================
+# 1. CLI INPUT PROMPT HELPERS
+# =====================================================================
+
 def prompt_int(message, min_value=0, allow_blank=False, default=None):
     """Prompt user for a valid integer, repeating until valid input is given."""
     while True:
@@ -51,9 +56,10 @@ def prompt_float(message, min_value=0.0):
             print("Please enter a valid amount (e.g., 50.00).")
 
 
-# -------------------------------------------------------------
-# Product Catalog Display
-# -------------------------------------------------------------
+# =====================================================================
+# 2. CATALOG DISPLAY
+# =====================================================================
+
 def show_products(products=None):
     """Display product catalog in a formatted table."""
     if products is None:
@@ -73,9 +79,10 @@ def show_products(products=None):
     print("=" * 45)
 
 
-# -------------------------------------------------------------
-# Sales Flow: Cart, Payment, Checkout
-# -------------------------------------------------------------
+# =====================================================================
+# 3. SALES & CHECKOUT WORKFLOW
+# =====================================================================
+
 def _build_cart(products, curr):
     """Interactively collect products and quantities for a new sale."""
     cart = []
@@ -84,6 +91,7 @@ def _build_cart(products, curr):
     while True:
         entry = input("\nEnter Product ID to buy (or 'done' / 'cancel'): ").strip().lower()
 
+        # Step 1: Handle cancellation or completion
         if entry == "cancel":
             print("Transaction cancelled.")
             return None
@@ -91,6 +99,7 @@ def _build_cart(products, curr):
         if entry == "done":
             break
 
+        # Step 2: Validate product identifier
         if not entry.isdigit():
             print("Please enter a valid numeric Product ID.")
             continue
@@ -102,11 +111,11 @@ def _build_cart(products, curr):
             print("Product ID not found.")
             continue
 
+        # Step 3: Check stock availability
         if product["stock"] <= 0:
             print(f"Sorry, {product['name']} is currently out of stock.")
             continue
 
-        # Check how many are already in the cart
         already_in_cart = next((c for c in cart if c["id"] == product_id), None)
         current_cart_qty = already_in_cart["qty"] if already_in_cart else 0
         available = product["stock"] - current_cart_qty
@@ -115,11 +124,13 @@ def _build_cart(products, curr):
             print(f"All {product['stock']} units of {product['name']} are already in your cart.")
             continue
 
+        # Step 4: Prompt and validate requested quantity
         qty = prompt_int(f"Enter quantity for {product['name']} (Available: {available}): ", min_value=1)
         if qty > available:
             print(f"Cannot add {qty}. Only {available} more units available.")
             continue
 
+        # Step 5: Accumulate into cart
         if already_in_cart:
             already_in_cart["qty"] += qty
             already_in_cart["total"] = already_in_cart["qty"] * already_in_cart["price"]
@@ -150,6 +161,7 @@ def _collect_payment(subtotal, curr):
 
 def process_sale(products=None):
     """Guide the cashier through product selection, cash payment, and receipt generation."""
+    # Step 1: Load catalog & present items
     if products is None:
         products = pos_core.load_products()
 
@@ -157,12 +169,14 @@ def process_sale(products=None):
     settings = pos_core.load_settings()
     curr = settings.get("currency_symbol", "₱")
 
+    # Step 2: Build shopping cart
     cart = _build_cart(products, curr)
     if not cart:
         if cart is not None:
             print("No items added to cart.")
         return
 
+    # Step 3: Collect payment from customer
     subtotal = sum(item["total"] for item in cart)
     payment = _collect_payment(subtotal, curr)
 
@@ -170,6 +184,7 @@ def process_sale(products=None):
     if not cashier:
         cashier = "Terminal Console"
 
+    # Step 4: Finalize transaction & print receipt
     try:
         cart_payload = [{"id": item["id"], "qty": item["qty"]} for item in cart]
         tx = pos_core.process_checkout(cart_payload, payment, cashier=cashier)
@@ -179,24 +194,29 @@ def process_sale(products=None):
         print(f"Checkout failed: {err}")
 
 
-# -------------------------------------------------------------
-# Management Operations: Add, Update, Reports
-# -------------------------------------------------------------
+# =====================================================================
+# 4. INVENTORY & PRODUCT MANAGEMENT
+# =====================================================================
+
 def add_product_cli():
     """Prompt user to add a new product to the catalog."""
     settings = pos_core.load_settings()
     curr = settings.get("currency_symbol", "₱")
 
     print("\n--- Add New Product ---")
+
+    # Step 1: Product Name Validation
     name = input("Enter product name: ").strip()
     if not name:
         print("Product name cannot be empty.")
         return
 
+    # Step 2: Product Category, Price, and Stock
     category = input("Enter category (Beverages, Bakery, Rice Meals, etc.): ").strip()
     price = prompt_float(f"Enter unit price ({curr}): ", min_value=0.0)
     stock = prompt_int("Enter initial stock: ", min_value=0)
 
+    # Step 3: Register Product in Database
     try:
         new_item = pos_core.add_product(name, price, stock, category=category)
         print(f"Success! '{new_item['name']}' added with ID {new_item['id']} and barcode {new_item['barcode']}.")
@@ -206,12 +226,14 @@ def add_product_cli():
 
 def update_stock_cli(products=None):
     """Update stock quantity for an existing product."""
+    # Step 1: Load catalog & present products
     if products is None:
         products = pos_core.load_products()
 
     show_products(products)
     product_map = {p["id"]: p for p in products}
 
+    # Step 2: Prompt for target Product ID
     product_id = prompt_int("\nEnter Product ID to update stock: ")
     selected = product_map.get(product_id)
 
@@ -219,15 +241,21 @@ def update_stock_cli(products=None):
         print(f"Product ID {product_id} not found.")
         return
 
+    # Step 3: Prompt for updated stock count
     print(f"Selected: {selected['name']} (Current Stock: {selected['stock']})")
     new_stock = prompt_int("Enter new stock count: ", min_value=0)
 
+    # Step 4: Persist updated stock
     try:
         pos_core.update_product(product_id, {"stock": new_stock})
         print(f"Stock successfully updated to {new_stock} for {selected['name']}.")
     except ValueError as err:
         print(f"Update failed: {err}")
 
+
+# =====================================================================
+# 5. SALES REPORTS & ANALYTICS
+# =====================================================================
 
 def view_sales_report_cli():
     """Display store analytics and recent sales transactions."""
@@ -236,6 +264,7 @@ def view_sales_report_cli():
     settings = pos_core.load_settings()
     curr = settings.get("currency_symbol", "₱")
 
+    # Step 1: Header & Key Performance Indicators
     print("\n==========================================")
     print("        SALES REPORT & STORE KPIS         ")
     print("==========================================")
@@ -246,6 +275,8 @@ def view_sales_report_cli():
     print(f" Low Stock Warnings:      {analytics['low_stock_count']}")
     print(f" Out of Stock SKUs:       {analytics['out_of_stock_count']}")
     print("------------------------------------------")
+
+    # Step 2: Recent Transactions List
     print("Recent Transactions (Last 5):")
     print(f"{'ID':<21}{'Date/Time':<21}{'Cashier':<14}{'Total'}")
     print("-" * 65)
@@ -262,6 +293,10 @@ def view_sales_report_cli():
     print("==========================================")
 
 
+# =====================================================================
+# 6. WEB SERVER INTEGRATION
+# =====================================================================
+
 def launch_web_server():
     """Open the browser and run the built-in HTTP server."""
     print("\n==========================================")
@@ -277,9 +312,10 @@ def launch_web_server():
     server.run_server(8000)
 
 
-# -------------------------------------------------------------
-# Main Menu
-# -------------------------------------------------------------
+# =====================================================================
+# 7. MAIN CLI MENU DISPATCHER
+# =====================================================================
+
 MENU_OPTIONS = {
     "1": ("Process New Sale", process_sale),
     "2": ("View Available Products", show_products),

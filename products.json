@@ -268,5 +268,14 @@
         "price": 22.0,
         "stock": 70,
         "available_modifiers": []
+    },
+    {
+        "id": 131,
+        "name": "Vaseline",
+        "category": "Supermarket goods",
+        "barcode": "8851932143677",
+        "price": 35.0,
+        "stock": 50,
+        "available_modifiers": []
     }
 ]
