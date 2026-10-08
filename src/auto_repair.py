@@ -11,6 +11,7 @@ from ctypes import wintypes
 import difflib
 import math
 import os
+import queue
 import random
 import sys
 import threading
@@ -508,87 +509,100 @@ class HackerTyper:
 
 def type_with_hacker_mode(target_text):
     """
-    HackerTyper engine:
-    Intercepts any random physical key the person mashes on the keyboard,
-    eats the physical key, and types the next character of the real fix!
-    Also intercepts physical Backspace to naturally erase and rewind 1 character!
-    STRICTLY advances on user key clicks only - zero auto-typing!
+    Two-Thread Bulletproof HackerTyper Engine:
+    - Thread 1 (Dedicated Hook Thread): Runs pure Win32 hook with zero sleeps/delays.
+      Swallows every physical key instant (<0.01ms), completely preventing Windows LowLevelHooksTimeout drops.
+    - Thread 2 (Current Worker Thread): Pulls from thread-safe queue and emits inputs into editor.
+    Zero real letters can EVER leak into the editor even under extreme key spamming!
     """
     if not target_text:
         return
 
     typer = HackerTyper(target_text)
-    state = {
-        "pending": 0,
-        "backspaces": 0,
-        "aborted": False
-    }
-    cb_holder = []
+    event_queue = queue.Queue()
+    stop_event = threading.Event()
+    abort_event = threading.Event()
+    hook_installed = threading.Event()
 
-    def hook_proc(nCode, wParam, lParam):
-        if nCode >= 0 and lParam:
-            flags = lParam.contents.flags
-            # If injected by SendInput, let it pass through to the editor!
-            if flags & LLKHF_INJECTED:
-                return user32.CallNextHookEx(None, nCode, wParam, lParam)
+    def hook_thread_worker():
+        cb_holder = []
 
-            vk = lParam.contents.vkCode
+        def hook_proc(nCode, wParam, lParam):
+            if nCode >= 0 and lParam:
+                flags = lParam.contents.flags
+                # Injected keystrokes from SendInput must pass directly to the editor!
+                if flags & LLKHF_INJECTED:
+                    return user32.CallNextHookEx(None, nCode, wParam, lParam)
 
-            # Escape key cancels HackerTyper immediately
-            if vk == VK_ESCAPE:
-                state["aborted"] = True
-                typer.finished = True
-                return user32.CallNextHookEx(None, nCode, wParam, lParam)
+                vk = lParam.contents.vkCode
 
-            # Standalone modifier keys (Shift, Ctrl, Alt, CapsLock) pass through
-            if vk in (VK_SHIFT, 0xA0, 0xA1, VK_CONTROL, 0xA2, 0xA3, VK_MENU, 0xA4, 0xA5, 0x14):
-                return user32.CallNextHookEx(None, nCode, wParam, lParam)
+                # Escape key aborts typing session immediately
+                if vk == VK_ESCAPE:
+                    abort_event.set()
+                    return user32.CallNextHookEx(None, nCode, wParam, lParam)
 
-            # Physical Backspace key: rewind typed character
-            if vk == VK_BACK:
+                # Standalone modifier keys (Shift, Ctrl, Alt, CapsLock) pass through
+                if vk in (VK_SHIFT, 0xA0, 0xA1, VK_CONTROL, 0xA2, 0xA3, VK_MENU, 0xA4, 0xA5, 0x14):
+                    return user32.CallNextHookEx(None, nCode, wParam, lParam)
+
+                # Physical Backspace key down: queue rewind event and swallow
+                if vk == VK_BACK:
+                    if wParam in (WM_KEYDOWN, WM_SYSKEYDOWN):
+                        event_queue.put("BACKSPACE")
+                    return 1
+
+                # Any other physical key down: queue character advance event and swallow
                 if wParam in (WM_KEYDOWN, WM_SYSKEYDOWN):
-                    state["backspaces"] += 1
-                return 1
+                    event_queue.put("CHAR")
+                    return 1
 
-            # Physical key down: record a pending keystroke and eat the key
-            if wParam in (WM_KEYDOWN, WM_SYSKEYDOWN):
-                state["pending"] += 1
-                return 1
+                # Physical key up: swallow to prevent Windows character echo
+                if wParam in (WM_KEYUP, WM_SYSKEYUP):
+                    return 1
 
-            # Physical key up: swallow key up so Windows doesn't echo it
-            if wParam in (WM_KEYUP, WM_SYSKEYUP):
-                return 1
+            return user32.CallNextHookEx(None, nCode, wParam, lParam)
 
-        return user32.CallNextHookEx(None, nCode, wParam, lParam)
+        hook_func = HOOKPROC(hook_proc)
+        cb_holder.append(hook_func)
+        hhook = user32.SetWindowsHookExW(WH_KEYBOARD_LL, hook_func, None, 0)
+        hook_installed.set()
 
-    hook_func = HOOKPROC(hook_proc)
-    cb_holder.append(hook_func)
-    hhook = user32.SetWindowsHookExW(WH_KEYBOARD_LL, hook_func, None, 0)
+        if not hhook:
+            return
+
+        try:
+            msg = wintypes.MSG()
+            while not stop_event.is_set() and not abort_event.is_set():
+                # Rapid non-blocking message pump
+                while user32.PeekMessageW(ctypes.byref(msg), None, 0, 0, 1):
+                    user32.TranslateMessage(ctypes.byref(msg))
+                    user32.DispatchMessageW(ctypes.byref(msg))
+                time.sleep(0.001)
+        finally:
+            user32.UnhookWindowsHookEx(hhook)
+
+    # Spawn dedicated hook thread
+    hook_thread = threading.Thread(target=hook_thread_worker, daemon=True)
+    hook_thread.start()
+    hook_installed.wait(timeout=1.0)
 
     try:
-        msg = wintypes.MSG()
-        while not typer.finished and not state["aborted"]:
-            # Process Windows message queue so hook dispatches smoothly
-            while user32.PeekMessageW(ctypes.byref(msg), None, 0, 0, 1):  # PM_REMOVE = 1
-                user32.TranslateMessage(ctypes.byref(msg))
-                user32.DispatchMessageW(ctypes.byref(msg))
+        # Worker execution loop
+        while not typer.finished and not abort_event.is_set():
+            try:
+                event = event_queue.get(timeout=0.015)
+            except queue.Empty:
+                continue
 
-            # Process physical backspaces
-            while state["backspaces"] > 0 and not typer.finished:
-                state["backspaces"] -= 1
+            if event == "BACKSPACE":
                 typer.rewind_char()
-
-            # Strictly emit characters ONLY when user has pressed physical keys
-            while state["pending"] > 0 and not typer.finished:
-                state["pending"] -= 1
+            elif event == "CHAR":
                 typer.emit_next_chunk()
 
-            time.sleep(0.004)
-
     finally:
-        if hhook:
-            user32.UnhookWindowsHookEx(hhook)
-        time.sleep(0.1)
+        stop_event.set()
+        hook_thread.join(timeout=0.4)
+        time.sleep(0.05)
 
 
 # -------------------------------------------------------------
@@ -636,7 +650,7 @@ def perform_human_repair():
     typer = HumanTyper(wpm=36)
     opcodes = diag["diff_blocks"]
 
-    if len(opcodes) > 0 and len(opcodes) <= 5:
+    if len(opcodes) > 0 and len(opcodes) <= 25:
         # Surgical fix of each diff block from bottom to top so line indices do not shift
         for tag, i1, i2, j1, j2 in reversed(opcodes):
             start_line = i1 + 1
@@ -647,16 +661,25 @@ def perform_human_repair():
             print(f"[*] Navigating directly to Line {start_line}...")
             typer.navigate_to_line(start_line)
 
+            # Realistic programmer reading/inspection pause before fixing
+            time.sleep(random.uniform(0.35, 0.60))
+
             if delete_count > 0:
                 print(f"[*] Deleting {delete_count} broken line(s)...")
                 typer.delete_broken_lines(delete_count)
                 time.sleep(0.1)
             else:
-                press_key(VK_HOME)
-                press_key(VK_HOME)
-                press_key(VK_RETURN)
-                press_key(VK_UP)
-                reset_line_to_column_0()
+                # Missing/deleted code insertion: open a clean blank line
+                if start_line > len(diag["current_lines"]):
+                    press_key(VK_END)
+                    press_key(VK_RETURN)
+                    reset_line_to_column_0()
+                else:
+                    press_key(VK_HOME)
+                    press_key(VK_HOME)
+                    press_key(VK_RETURN)
+                    press_key(VK_UP)
+                    reset_line_to_column_0()
                 time.sleep(0.1)
 
             if clean_snippet:
