@@ -365,13 +365,13 @@ class MouseWanderer:
 # Human-like Typing Simulator
 # -------------------------------------------------------------
 class HumanTyper:
-    def __init__(self, wpm=65, typo_chance=0.018):
+    def __init__(self, wpm=36, typo_chance=0.025):
         self.wpm = wpm
         self.typo_chance = typo_chance
         self.chars_since_pause = 0
 
     def type_string(self, text):
-        """Types a string character-by-character with organic human pacing and realistic random delays."""
+        """Types a string character-by-character with a much slower, deliberate human pacing and realistic random delays."""
         lines = text.split("\n")
         total_lines = len(lines)
 
@@ -386,34 +386,33 @@ class HumanTyper:
                 if char not in " \t":
                     is_leading_indent = False
 
-                # Occasional simulated human typo with natural reaction and backspace correction
+                # Occasional simulated human typo with deliberate reaction and backspace correction
                 if not is_leading_indent and self.typo_chance > 0 and char.isalpha() and random.random() < self.typo_chance:
                     wrong_char = chr(ord(char) + (1 if random.random() > 0.5 else -1))
                     send_char(wrong_char)
-                    # Natural reaction delay before noticing mistake
-                    time.sleep(random.uniform(0.12, 0.24))
+                    # Natural human delay before noticing the typo
+                    time.sleep(random.uniform(0.22, 0.40))
                     press_key(VK_BACK)
-                    time.sleep(random.uniform(0.08, 0.16))
+                    time.sleep(random.uniform(0.15, 0.28))
 
                 send_char(char)
                 self.chars_since_pause += 1
 
-                # Dynamic, realistic keystroke delay
+                # Much slower, natural keystroke delays
                 if is_leading_indent:
-                    # Indent spaces are typed rhythmically and quickly
-                    delay = random.uniform(0.025, 0.05)
+                    # Clear, visible indentation steps
+                    delay = random.uniform(0.08, 0.16)
                 else:
-                    # Base human keystroke delay with natural Gaussian variance
-                    delay = random.gauss(0.065, 0.022)
-                    delay = max(0.035, min(0.13, delay))
+                    # Deliberate human character speed (~32-40 WPM, 130ms - 260ms per key)
+                    delay = random.uniform(0.13, 0.27)
 
-                    # Thought pause on punctuation and syntax operators
-                    if char in " ,;:().[]{}=":
-                        delay += random.uniform(0.10, 0.26)
+                    # Distinct pause when typing syntax symbols & operators
+                    if char in " ,;:().[]{}='\"":
+                        delay += random.uniform(0.20, 0.45)
 
-                    # Periodic organic thinking micro-pause (reading code ahead)
-                    if self.chars_since_pause > random.randint(28, 48):
-                        delay += random.uniform(0.25, 0.55)
+                    # Organic thinking pause every 18 to 32 characters (thinking of next token)
+                    if self.chars_since_pause > random.randint(18, 32):
+                        delay += random.uniform(0.50, 1.10)
                         self.chars_since_pause = 0
 
                 time.sleep(delay)
@@ -422,8 +421,8 @@ class HumanTyper:
             # End of line newline
             if line_idx < total_lines - 1:
                 press_key(VK_RETURN)
-                # Realistic thinking pause before typing the next line
-                time.sleep(random.uniform(0.35, 0.70))
+                # Realistic thought pause before starting to type the next line
+                time.sleep(random.uniform(0.70, 1.40))
                 self.chars_since_pause = 0
 
     def navigate_to_line(self, line_num):
@@ -431,36 +430,37 @@ class HumanTyper:
         Assumes pos_system.py is ALREADY open in the active editor.
         Jumps directly to line_num using Ctrl+G with realistic keystroke delays.
         """
-        time.sleep(random.uniform(0.15, 0.28))
+        time.sleep(random.uniform(0.25, 0.45))
         # Go to line (Ctrl+G)
         send_combo(VK_CONTROL, ord("G"))
-        time.sleep(random.uniform(0.20, 0.35))
+        time.sleep(random.uniform(0.30, 0.50))
 
-        # Type line number
+        # Type line number deliberately
         for c in str(line_num):
             send_char(c)
-            time.sleep(random.uniform(0.05, 0.09))
-        time.sleep(random.uniform(0.14, 0.24))
-        press_key(VK_RETURN)
+            time.sleep(random.uniform(0.10, 0.18))
         time.sleep(random.uniform(0.25, 0.40))
+        press_key(VK_RETURN)
+        time.sleep(random.uniform(0.35, 0.60))
 
     def delete_broken_lines(self, count):
-        """Removes `count` lines using VS Code line delete (Ctrl+Shift+K)."""
+        """Removes `count` lines using VS Code line delete (Ctrl+Shift+K) with visible human pacing."""
         if count <= 0:
             return
         press_key(VK_HOME)
-        time.sleep(0.05)
+        time.sleep(0.10)
         press_key(VK_HOME)
-        time.sleep(0.05)
+        time.sleep(0.10)
 
         for _ in range(count):
             send_combo(VK_CONTROL, VK_SHIFT, ord("K"))
-            time.sleep(random.uniform(0.10, 0.18))
+            time.sleep(random.uniform(0.25, 0.45))
 
     def save_file(self):
         """Saves current file with Ctrl+S."""
+        time.sleep(random.uniform(0.35, 0.55))
         send_combo(VK_CONTROL, ord("S"))
-        time.sleep(random.uniform(0.25, 0.40))
+        time.sleep(random.uniform(0.40, 0.60))
 
 
 # -------------------------------------------------------------
@@ -503,7 +503,7 @@ def perform_human_repair():
     wanderer.start()
 
     try:
-        typer = HumanTyper(wpm=68)
+        typer = HumanTyper(wpm=36)
         opcodes = diag["diff_blocks"]
 
         if len(opcodes) > 0 and len(opcodes) <= 5:
@@ -520,15 +520,15 @@ def perform_human_repair():
                 if delete_count > 0:
                     print(f"[*] Deleting {delete_count} broken line(s)...")
                     typer.delete_broken_lines(delete_count)
-                    time.sleep(random.uniform(0.20, 0.35))
+                    time.sleep(random.uniform(0.40, 0.70))
 
                 if clean_snippet:
                     print(f"[*] Typing repair code ({len(clean_snippet)} chars)...")
                     typer.type_string(clean_snippet)
-                    time.sleep(random.uniform(0.30, 0.45))
+                    time.sleep(random.uniform(0.60, 1.00))
 
                 typer.save_file()
-                time.sleep(0.3)
+                time.sleep(0.4)
 
         else:
             # Heavy corruption: Clean reset
