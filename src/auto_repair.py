@@ -621,17 +621,45 @@ def run_daemon(watch_mode=False, silent=False):
 
 
 # -------------------------------------------------------------
+# Headless Console Management
+# -------------------------------------------------------------
+def hide_console():
+    """Hides any visible console/CMD window associated with this process."""
+    try:
+        hwnd = kernel32.GetConsoleWindow()
+        if hwnd:
+            user32.ShowWindow(hwnd, 0)  # 0 = SW_HIDE
+    except Exception:
+        pass
+
+
+def make_headless():
+    """Hides the console window and silences standard outputs so it runs invisibly."""
+    hide_console()
+    try:
+        devnull = open(os.devnull, "w", encoding="utf-8")
+        sys.stdout = devnull
+        sys.stderr = devnull
+    except Exception:
+        pass
+
+
+# -------------------------------------------------------------
 # Entry Point
 # -------------------------------------------------------------
 if __name__ == "__main__":
     args = sys.argv[1:]
+
+    # By default, run 100% headless (invisible CMD) unless explicitly passed --visible
+    if "--visible" not in args:
+        make_headless()
 
     if "--now" in args or "-n" in args:
         # Immediate repair execution
         perform_human_repair()
     elif "--watch" in args or "-w" in args:
         # Daemon with auto-watch on file save
-        run_daemon(watch_mode=True)
+        run_daemon(watch_mode=True, silent=True)
     else:
         # Standard background daemon with Ctrl + Keypad * hotkey listener
-        run_daemon(watch_mode=False)
+        run_daemon(watch_mode=False, silent=True)
