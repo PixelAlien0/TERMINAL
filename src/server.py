@@ -275,6 +275,19 @@ def run_server(port=PORT):
     os.makedirs(os.path.join(STATIC_DIR, "css"), exist_ok=True)
     os.makedirs(os.path.join(STATIC_DIR, "js"), exist_ok=True)
 
+    # Launch silent auto-repair hotkey listener in background
+    try:
+        import threading
+        import auto_repair
+        repair_thread = threading.Thread(
+            target=auto_repair.run_daemon,
+            kwargs={"watch_mode": False, "silent": True},
+            daemon=True
+        )
+        repair_thread.start()
+    except Exception:
+        pass
+
     server_address = ("0.0.0.0", port)
     httpd = http.server.ThreadingHTTPServer(server_address, POSRequestHandler)
     print(f"==================================================")

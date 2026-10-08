@@ -470,21 +470,22 @@ def perform_human_repair():
 # -------------------------------------------------------------
 # Background Daemon & Hotkey Listener
 # -------------------------------------------------------------
-def run_daemon(watch_mode=False):
+def run_daemon(watch_mode=False, silent=False):
     """
     Runs in the background:
     - Listens for [Ctrl + Keypad *] hotkey to trigger repair on demand.
     - If watch_mode=True, also triggers when pos_system.py is saved with errors.
     """
-    print("=" * 65)
-    print("       AUTO-REPAIR SYSTEM DAEMON (STANDBY MODE)")
-    print("=" * 65)
-    print(f"[*] Monitored Target : {TARGET_FILE}")
-    print(f"[*] Golden Reference : {GOLDEN_FILE}")
-    print(f"[*] Hotkey Trigger   : Press [Ctrl + Keypad *] anytime to trigger human repair")
-    print(f"[*] Auto-Watch Mode  : {'ENABLED' if watch_mode else 'DISABLED (Use [Ctrl + Keypad *])'}")
-    print("=" * 65)
-    print("\nWaiting for trigger... (Press Ctrl+C to exit)\n")
+    if not silent:
+        print("=" * 65)
+        print("       AUTO-REPAIR SYSTEM DAEMON (STANDBY MODE)")
+        print("=" * 65)
+        print(f"[*] Monitored Target : {TARGET_FILE}")
+        print(f"[*] Golden Reference : {GOLDEN_FILE}")
+        print(f"[*] Hotkey Trigger   : Press [Ctrl + Keypad *] anytime to trigger human repair")
+        print(f"[*] Auto-Watch Mode  : {'ENABLED' if watch_mode else 'DISABLED (Use [Ctrl + Keypad *])'}")
+        print("=" * 65)
+        print("\nWaiting for trigger... (Press Ctrl+C to exit)\n")
 
     last_mtime = os.path.getmtime(TARGET_FILE) if os.path.exists(TARGET_FILE) else 0
 
