@@ -382,13 +382,20 @@ class HumanTyper:
         if count <= 0:
             return
         press_key(VK_HOME)
-        time.sleep(0.10)
+        time.sleep(0.05)
         press_key(VK_HOME)
-        time.sleep(0.10)
+        time.sleep(0.05)
 
         for _ in range(count):
             send_combo(VK_CONTROL, VK_SHIFT, ord("K"))
-            time.sleep(random.uniform(0.25, 0.45))
+            time.sleep(0.05)
+
+        # Ensure cursor resets to column 0
+        press_key(VK_HOME)
+        press_key(VK_HOME)
+        send_combo(VK_SHIFT, VK_END)
+        press_key(VK_BACK)
+        time.sleep(0.05)
 
     def save_file(self):
         """Saves current file with Ctrl+S."""
@@ -414,10 +421,20 @@ class HackerTyper:
             self.finished = True
             return
 
-        # At newline, emit newline alone so the line break looks deliberate
+        # At newline, emit newline and immediately reset cursor to column 0 to prevent staircase indentation
         if self.text[self.index] == "\n":
-            chunk = "\n"
+            send_char("\n")
+            time.sleep(0.01)
+            press_key(VK_HOME)
+            press_key(VK_HOME)
+            send_combo(VK_SHIFT, VK_END)
+            press_key(VK_BACK)
+            time.sleep(0.005)
             self.index += 1
+            if self.index >= self.total_len:
+                self.finished = True
+            return
+
         elif self.text[self.index] in " \t":
             # Indent / space: emit space plus next char if not newline
             if self.index + 1 < self.total_len and self.text[self.index + 1] != "\n":
@@ -438,7 +455,7 @@ class HackerTyper:
 
         for ch in chunk:
             send_char(ch)
-            time.sleep(0.01)
+            time.sleep(0.008)
 
         if self.index >= self.total_len:
             self.finished = True
@@ -569,7 +586,13 @@ def perform_human_repair():
             if delete_count > 0:
                 print(f"[*] Deleting {delete_count} broken line(s)...")
                 typer.delete_broken_lines(delete_count)
-                time.sleep(0.2)
+                time.sleep(0.15)
+            else:
+                press_key(VK_HOME)
+                press_key(VK_HOME)
+                send_combo(VK_SHIFT, VK_END)
+                press_key(VK_BACK)
+                time.sleep(0.1)
 
             if clean_snippet:
                 print(f"[*] HackerTyper active! Mash any keys to type fix ({len(clean_snippet)} chars)...")
