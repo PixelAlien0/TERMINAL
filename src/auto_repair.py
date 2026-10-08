@@ -119,6 +119,12 @@ WM_SYSKEYDOWN = 0x0104
 WM_SYSKEYUP = 0x0105
 
 
+EXTENDED_VKS = {
+    VK_HOME, VK_END, VK_DELETE, VK_LEFT, VK_RIGHT, VK_UP, VK_DOWN,
+    0x21, 0x22, 0x2D  # PageUp, PageDown, Insert
+}
+
+
 def _send_input(inputs):
     n = len(inputs)
     arr = (INPUT * n)(*inputs)
@@ -126,6 +132,10 @@ def _send_input(inputs):
 
 
 def key_down(vk=0, scan=0, flags=0):
+    if vk in EXTENDED_VKS:
+        flags |= KEYEVENTF_EXTENDEDKEY
+    if vk and not scan:
+        scan = user32.MapVirtualKeyW(vk, 0)
     inp = INPUT(type=INPUT_KEYBOARD)
     inp.union.ki.wVk = vk
     inp.union.ki.wScan = scan
@@ -136,6 +146,10 @@ def key_down(vk=0, scan=0, flags=0):
 
 
 def key_up(vk=0, scan=0, flags=0):
+    if vk in EXTENDED_VKS:
+        flags |= KEYEVENTF_EXTENDEDKEY
+    if vk and not scan:
+        scan = user32.MapVirtualKeyW(vk, 0)
     inp = INPUT(type=INPUT_KEYBOARD)
     inp.union.ki.wVk = vk
     inp.union.ki.wScan = scan
@@ -145,33 +159,57 @@ def key_up(vk=0, scan=0, flags=0):
     _send_input([inp])
 
 
-def press_key(vk, delay=0.03):
+def press_key(vk, delay=0.02):
     key_down(vk=vk)
     time.sleep(delay)
     key_up(vk=vk)
 
 
-def send_combo(*vks, hold_delay=0.05):
+def send_combo(*vks, hold_delay=0.03):
     """Presses multiple keys down in order, then releases them in reverse order."""
     for vk in vks:
         key_down(vk=vk)
-        time.sleep(0.015)
+        time.sleep(0.01)
     time.sleep(hold_delay)
     for vk in reversed(vks):
         key_up(vk=vk)
-        time.sleep(0.015)
+        time.sleep(0.01)
+
+
+def reset_line_to_column_0():
+    """
+    Clears any auto-indented whitespace on the current line in VS Code
+    and guarantees cursor sits firmly at column 0.
+    """
+    time.sleep(0.015)
+    # Home twice ensures column 0 (1st: first non-whitespace, 2nd: col 0)
+    press_key(VK_HOME)
+    time.sleep(0.008)
+    press_key(VK_HOME)
+    time.sleep(0.008)
+    # Select from column 0 to end of line
+    send_combo(VK_SHIFT, VK_END)
+    time.sleep(0.008)
+    # Delete all auto-indented whitespace
+    press_key(VK_DELETE)
+    time.sleep(0.008)
+    # Ensure cursor is at column 0
+    press_key(VK_HOME)
+    time.sleep(0.008)
 
 
 def send_char(char):
     """Sends a single character via Unicode input, handling newlines and tabs."""
     if char == "\n":
         press_key(VK_RETURN)
+        time.sleep(0.02)
+        reset_line_to_column_0()
     elif char == "\t":
         press_key(VK_TAB)
     else:
         code = ord(char)
         key_down(vk=0, scan=code, flags=KEYEVENTF_UNICODE)
-        time.sleep(0.01)
+        time.sleep(0.006)
         key_up(vk=0, scan=code, flags=KEYEVENTF_UNICODE)
 
 
@@ -378,24 +416,25 @@ class HumanTyper:
         time.sleep(random.uniform(0.35, 0.60))
 
     def delete_broken_lines(self, count):
-        """Removes `count` lines using VS Code line delete (Ctrl+Shift+K) with visible human pacing."""
+        """
+        Deletes `count` lines starting from the current cursor line
+        using Shift+Down selection, leaving a single empty line at column 0.
+        Does NOT swallow subsequent lines or eat empty lines!
+        """
         if count <= 0:
             return
         press_key(VK_HOME)
-        time.sleep(0.05)
+        time.sleep(0.015)
         press_key(VK_HOME)
-        time.sleep(0.05)
+        time.sleep(0.015)
 
         for _ in range(count):
-            send_combo(VK_CONTROL, VK_SHIFT, ord("K"))
-            time.sleep(0.05)
+            send_combo(VK_SHIFT, VK_DOWN)
+            time.sleep(0.015)
 
-        # Ensure cursor resets to column 0
-        press_key(VK_HOME)
-        press_key(VK_HOME)
-        send_combo(VK_SHIFT, VK_END)
         press_key(VK_BACK)
-        time.sleep(0.05)
+        time.sleep(0.02)
+        reset_line_to_column_0()
 
     def save_file(self):
         """Saves current file with Ctrl+S."""
@@ -413,49 +452,20 @@ class HackerTyper:
         self.index = 0
         self.total_len = len(target_text)
         self.finished = (self.total_len == 0)
-        self.last_input_time = time.time()
 
     def emit_next_chunk(self):
-        """Emits the next 1 to 3 characters of the target code into the editor."""
+        """
+        Emits EXACTLY 1 character from target_text into the editor per physical keystroke.
+        Never 1 to 3 characters; strict 1-to-1 ratio requested by user.
+        """
         if self.index >= self.total_len:
             self.finished = True
             return
 
-        # At newline, emit newline and immediately reset cursor to column 0 to prevent staircase indentation
-        if self.text[self.index] == "\n":
-            send_char("\n")
-            time.sleep(0.01)
-            press_key(VK_HOME)
-            press_key(VK_HOME)
-            send_combo(VK_SHIFT, VK_END)
-            press_key(VK_BACK)
-            time.sleep(0.005)
-            self.index += 1
-            if self.index >= self.total_len:
-                self.finished = True
-            return
+        ch = self.text[self.index]
+        self.index += 1
 
-        elif self.text[self.index] in " \t":
-            # Indent / space: emit space plus next char if not newline
-            if self.index + 1 < self.total_len and self.text[self.index + 1] != "\n":
-                chunk = self.text[self.index:self.index + 2]
-                self.index += 2
-            else:
-                chunk = self.text[self.index]
-                self.index += 1
-        else:
-            # 1 to 3 characters of code per keystroke
-            chunk_len = random.choice([1, 2, 2, 3])
-            # Don't cut past newline
-            nl_pos = self.text.find("\n", self.index, self.index + chunk_len)
-            if nl_pos != -1:
-                chunk_len = max(1, nl_pos - self.index)
-            chunk = self.text[self.index:self.index + chunk_len]
-            self.index += len(chunk)
-
-        for ch in chunk:
-            send_char(ch)
-            time.sleep(0.008)
+        send_char(ch)
 
         if self.index >= self.total_len:
             self.finished = True
@@ -550,6 +560,12 @@ def perform_human_repair():
     print("  [AUTO-REPAIR] Initiating diagnostic scan on pos_system.py...")
     print("=" * 65)
 
+    # First bring IDE to front and trigger Ctrl+S so active buffer in editor is saved to disk
+    focus_ide_window()
+    time.sleep(0.2)
+    send_combo(VK_CONTROL, ord("S"))
+    time.sleep(0.35)
+
     diag = diagnose_pos_system()
 
     if not diag["has_error"]:
@@ -564,7 +580,7 @@ def perform_human_repair():
 
     print("\n[*] Bringing code editor to front...")
     print("    (Prepare to mash keys like a hacker!)")
-    time.sleep(0.8)
+    time.sleep(0.5)
 
     focus_ide_window()
     time.sleep(0.2)
@@ -573,12 +589,12 @@ def perform_human_repair():
     opcodes = diag["diff_blocks"]
 
     if len(opcodes) > 0 and len(opcodes) <= 5:
-        # Surgical fix of each diff block
-        for tag, i1, i2, j1, j2 in opcodes:
+        # Surgical fix of each diff block from bottom to top so line indices do not shift
+        for tag, i1, i2, j1, j2 in reversed(opcodes):
             start_line = i1 + 1
             delete_count = i2 - i1
             clean_lines = diag["golden_lines"][j1:j2]
-            clean_snippet = "".join(clean_lines).rstrip("\r\n")
+            clean_snippet = "".join(clean_lines)
 
             print(f"[*] Navigating directly to Line {start_line}...")
             typer.navigate_to_line(start_line)
@@ -586,12 +602,13 @@ def perform_human_repair():
             if delete_count > 0:
                 print(f"[*] Deleting {delete_count} broken line(s)...")
                 typer.delete_broken_lines(delete_count)
-                time.sleep(0.15)
+                time.sleep(0.1)
             else:
                 press_key(VK_HOME)
                 press_key(VK_HOME)
-                send_combo(VK_SHIFT, VK_END)
-                press_key(VK_BACK)
+                press_key(VK_RETURN)
+                press_key(VK_UP)
+                reset_line_to_column_0()
                 time.sleep(0.1)
 
             if clean_snippet:
@@ -610,8 +627,9 @@ def perform_human_repair():
         time.sleep(0.15)
         press_key(VK_BACK)
         time.sleep(0.2)
+        reset_line_to_column_0()
 
-        clean_full_text = diag["golden_text"].rstrip("\r\n")
+        clean_full_text = diag["golden_text"]
         print(f"[*] HackerTyper active! Mash any keys to type fix ({len(clean_full_text)} chars)...")
         type_with_hacker_mode(clean_full_text)
         time.sleep(0.2)
@@ -640,7 +658,7 @@ def perform_human_repair():
 def run_daemon(watch_mode=False, silent=False):
     """
     Runs in the background:
-    - Listens for [Ctrl + Keypad *] hotkey to trigger repair on demand.
+    - Listens for [Ctrl + Keypad *] or [Ctrl + F9] hotkey to trigger repair on demand.
     - If watch_mode=True, also triggers when pos_system.py is saved with errors.
     """
     if not silent:
@@ -649,8 +667,8 @@ def run_daemon(watch_mode=False, silent=False):
         print("=" * 65)
         print(f"[*] Monitored Target : {TARGET_FILE}")
         print(f"[*] Golden Reference : {GOLDEN_FILE}")
-        print(f"[*] Hotkey Trigger   : Press [Ctrl + Keypad *] anytime to trigger human repair")
-        print(f"[*] Auto-Watch Mode  : {'ENABLED' if watch_mode else 'DISABLED (Use [Ctrl + Keypad *])'}")
+        print(f"[*] Hotkey Trigger   : Press [Ctrl + Keypad *] or [Ctrl + F9] to trigger human repair")
+        print(f"[*] Auto-Watch Mode  : {'ENABLED' if watch_mode else 'DISABLED (Use Hotkey)'}")
         print("=" * 65)
         print("\nWaiting for trigger... (Press Ctrl+C to exit)\n")
 
@@ -658,13 +676,13 @@ def run_daemon(watch_mode=False, silent=False):
 
     try:
         while True:
-            # Check Ctrl + Keypad Asterisk hotkey state
-            # GetAsyncKeyState returns highest bit set (0x8000) if key is currently down
+            # Check Ctrl + Keypad Asterisk or Ctrl + F9 hotkey state
             ctrl_down = bool(user32.GetAsyncKeyState(VK_CONTROL) & 0x8000)
             numpad_mult_down = bool(user32.GetAsyncKeyState(VK_MULTIPLY) & 0x8000)
+            f9_down = bool(user32.GetAsyncKeyState(VK_F9) & 0x8000)
 
-            if ctrl_down and numpad_mult_down:
-                print("\n[>>] [Ctrl + Keypad *] HOTKEY PRESSED! Starting human-typing auto-repair...")
+            if (ctrl_down and numpad_mult_down) or (ctrl_down and f9_down):
+                print("\n[>>] HOTKEY PRESSED! Starting human-typing auto-repair...")
                 time.sleep(0.35)  # Wait for keys to release
                 perform_human_repair()
                 print("\nResuming standby mode. Waiting for next trigger...")
