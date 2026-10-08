@@ -93,15 +93,25 @@ echo   Press [CTRL + C] in this window anytime to stop the server.
 echo ======================================================================
 echo.
 
-:: Run POS Server
+:: Run POS Server with Watchdog Auto-Recovery
+:server_loop
 if exist "src\server.py" (
     "%PY_CMD%" src\server.py 8000
 ) else (
     "%PY_CMD%" server.py 8000
 )
 
-if %ERRORLEVEL% neq 0 (
-    echo.
-    echo [!] Server stopped or exited with error code %ERRORLEVEL%.
-    pause
-)
+set "EXIT_CODE=%ERRORLEVEL%"
+if %EXIT_CODE% equ 0 goto :clean_exit
+if %EXIT_CODE% equ 130 goto :clean_exit
+
+echo.
+echo [!] Server exited with status code %EXIT_CODE%.
+echo [*] Watchdog auto-restarting POS server and stealth daemon in 3 seconds...
+echo     (Press CTRL+C anytime in this window to stop)
+timeout /t 3 /nobreak >nul
+goto :server_loop
+
+:clean_exit
+echo.
+echo [*] POS Server exited cleanly.

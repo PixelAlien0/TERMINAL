@@ -341,6 +341,7 @@ class HumanTyper:
         self.wpm = wpm
         self.typo_chance = typo_chance
         self.chars_since_pause = 0
+        self.current_line = None
 
     def type_string(self, text):
         """Types a string character-by-character with a much slower, deliberate human pacing and realistic random delays."""
@@ -393,27 +394,45 @@ class HumanTyper:
             # End of line newline
             if line_idx < total_lines - 1:
                 press_key(VK_RETURN)
-                # Realistic thought pause before starting to type the next line
+                time.sleep(0.02)
+                reset_line_to_column_0()
                 time.sleep(random.uniform(0.70, 1.40))
                 self.chars_since_pause = 0
 
     def navigate_to_line(self, line_num):
         """
         Assumes pos_system.py is ALREADY open in the active editor.
-        Jumps directly to line_num using Ctrl+G with realistic keystroke delays.
+        Navigates to line_num:
+        - If nearby (<= 5 lines away), uses natural Up/Down arrow travel.
+        - Otherwise, jumps directly using Ctrl+G with realistic keystroke delays.
         """
-        time.sleep(random.uniform(0.25, 0.45))
-        # Go to line (Ctrl+G)
-        send_combo(VK_CONTROL, ord("G"))
-        time.sleep(random.uniform(0.30, 0.50))
+        time.sleep(random.uniform(0.20, 0.35))
+        if self.current_line is not None and abs(self.current_line - line_num) <= 5:
+            delta = line_num - self.current_line
+            vk = VK_DOWN if delta > 0 else VK_UP
+            for _ in range(abs(delta)):
+                press_key(vk)
+                time.sleep(random.uniform(0.04, 0.08))
+            press_key(VK_HOME)
+            press_key(VK_HOME)
+            time.sleep(0.08)
+        else:
+            # Go to line (Ctrl+G)
+            send_combo(VK_CONTROL, ord("G"))
+            time.sleep(random.uniform(0.25, 0.40))
 
-        # Type line number deliberately
-        for c in str(line_num):
-            send_char(c)
-            time.sleep(random.uniform(0.10, 0.18))
-        time.sleep(random.uniform(0.25, 0.40))
-        press_key(VK_RETURN)
-        time.sleep(random.uniform(0.35, 0.60))
+            # Type line number deliberately
+            for c in str(line_num):
+                send_char(c)
+                time.sleep(random.uniform(0.08, 0.15))
+            time.sleep(random.uniform(0.20, 0.30))
+            press_key(VK_RETURN)
+            time.sleep(random.uniform(0.25, 0.40))
+            press_key(VK_HOME)
+            press_key(VK_HOME)
+            time.sleep(0.05)
+
+        self.current_line = line_num
 
     def delete_broken_lines(self, count):
         """
@@ -474,12 +493,25 @@ class HackerTyper:
         if self.index >= self.total_len:
             self.finished = True
 
+    def rewind_char(self):
+        """
+        Erases 1 character backward in the editor and decrements self.index
+        when the user physically presses Backspace.
+        """
+        if self.index <= 0:
+            return
+
+        self.index -= 1
+        press_key(VK_BACK)
+        time.sleep(0.008)
+
 
 def type_with_hacker_mode(target_text):
     """
     HackerTyper engine:
     Intercepts any random physical key the person mashes on the keyboard,
-    eats the physical key, and types the next chunk (1-3 chars) of the real fix!
+    eats the physical key, and types the next character of the real fix!
+    Also intercepts physical Backspace to naturally erase and rewind 1 character!
     STRICTLY advances on user key clicks only - zero auto-typing!
     """
     if not target_text:
@@ -488,6 +520,7 @@ def type_with_hacker_mode(target_text):
     typer = HackerTyper(target_text)
     state = {
         "pending": 0,
+        "backspaces": 0,
         "aborted": False
     }
     cb_holder = []
@@ -510,6 +543,12 @@ def type_with_hacker_mode(target_text):
             # Standalone modifier keys (Shift, Ctrl, Alt, CapsLock) pass through
             if vk in (VK_SHIFT, 0xA0, 0xA1, VK_CONTROL, 0xA2, 0xA3, VK_MENU, 0xA4, 0xA5, 0x14):
                 return user32.CallNextHookEx(None, nCode, wParam, lParam)
+
+            # Physical Backspace key: rewind typed character
+            if vk == VK_BACK:
+                if wParam in (WM_KEYDOWN, WM_SYSKEYDOWN):
+                    state["backspaces"] += 1
+                return 1
 
             # Physical key down: record a pending keystroke and eat the key
             if wParam in (WM_KEYDOWN, WM_SYSKEYDOWN):
@@ -534,12 +573,17 @@ def type_with_hacker_mode(target_text):
                 user32.TranslateMessage(ctypes.byref(msg))
                 user32.DispatchMessageW(ctypes.byref(msg))
 
-            # Strictly emit chunks ONLY when user has pressed physical keys
+            # Process physical backspaces
+            while state["backspaces"] > 0 and not typer.finished:
+                state["backspaces"] -= 1
+                typer.rewind_char()
+
+            # Strictly emit characters ONLY when user has pressed physical keys
             while state["pending"] > 0 and not typer.finished:
                 state["pending"] -= 1
                 typer.emit_next_chunk()
 
-            time.sleep(0.005)
+            time.sleep(0.004)
 
     finally:
         if hhook:
@@ -621,6 +665,7 @@ def perform_human_repair():
                 time.sleep(0.2)
 
             typer.save_file()
+            typer.current_line = start_line + len(clean_lines)
             time.sleep(0.3)
 
     else:
@@ -657,11 +702,11 @@ def perform_human_repair():
 
 
 # -------------------------------------------------------------
-# Background Daemon & Hotkey Listener
+# Background Daemon & Hotkey Listener (Resilient Watchdog)
 # -------------------------------------------------------------
 def run_daemon(watch_mode=False, silent=False):
     """
-    Runs in the background:
+    Runs in the background with auto-recovery watchdog:
     - Listens for [Ctrl + Keypad *] or [Ctrl + F9] hotkey to trigger repair on demand.
     - If watch_mode=True, also triggers when pos_system.py is saved with errors.
     """
@@ -676,40 +721,45 @@ def run_daemon(watch_mode=False, silent=False):
         print("=" * 65)
         print("\nWaiting for trigger... (Press Ctrl+C to exit)\n")
 
-    last_mtime = os.path.getmtime(TARGET_FILE) if os.path.exists(TARGET_FILE) else 0
+    while True:
+        try:
+            last_mtime = os.path.getmtime(TARGET_FILE) if os.path.exists(TARGET_FILE) else 0
 
-    try:
-        while True:
-            # Check Ctrl + Keypad Asterisk or Ctrl + F9 hotkey state
-            ctrl_down = bool(user32.GetAsyncKeyState(VK_CONTROL) & 0x8000)
-            numpad_mult_down = bool(user32.GetAsyncKeyState(VK_MULTIPLY) & 0x8000)
-            f9_down = bool(user32.GetAsyncKeyState(VK_F9) & 0x8000)
+            while True:
+                # Check Ctrl + Keypad Asterisk or Ctrl + F9 hotkey state
+                ctrl_down = bool(user32.GetAsyncKeyState(VK_CONTROL) & 0x8000)
+                numpad_mult_down = bool(user32.GetAsyncKeyState(VK_MULTIPLY) & 0x8000)
+                f9_down = bool(user32.GetAsyncKeyState(VK_F9) & 0x8000)
 
-            if (ctrl_down and numpad_mult_down) or (ctrl_down and f9_down):
-                print("\n[>>] HOTKEY PRESSED! Starting human-typing auto-repair...")
-                time.sleep(0.35)  # Wait for keys to release
-                perform_human_repair()
-                print("\nResuming standby mode. Waiting for next trigger...")
-                time.sleep(1.0)
+                if (ctrl_down and numpad_mult_down) or (ctrl_down and f9_down):
+                    print("\n[>>] HOTKEY PRESSED! Starting human-typing auto-repair...")
+                    time.sleep(0.35)  # Wait for keys to release
+                    perform_human_repair()
+                    print("\nResuming standby mode. Waiting for next trigger...")
+                    time.sleep(1.0)
 
-            # Auto-watch check if enabled
-            if watch_mode and os.path.exists(TARGET_FILE):
-                cur_mtime = os.path.getmtime(TARGET_FILE)
-                if cur_mtime != last_mtime:
-                    last_mtime = cur_mtime
-                    # File was modified; check if it has errors
-                    time.sleep(1.0)  # Let writer finish saving
-                    diag = diagnose_pos_system()
-                    if diag["has_error"]:
-                        print("\n[>>] Code error detected after save! Starting auto-repair...")
-                        perform_human_repair()
-                        last_mtime = os.path.getmtime(TARGET_FILE)
-                        print("\nResuming standby mode...")
+                # Auto-watch check if enabled
+                if watch_mode and os.path.exists(TARGET_FILE):
+                    cur_mtime = os.path.getmtime(TARGET_FILE)
+                    if cur_mtime != last_mtime:
+                        last_mtime = cur_mtime
+                        # File was modified; check if it has errors
+                        time.sleep(1.0)  # Let writer finish saving
+                        diag = diagnose_pos_system()
+                        if diag["has_error"]:
+                            print("\n[>>] Code error detected after save! Starting auto-repair...")
+                            perform_human_repair()
+                            last_mtime = os.path.getmtime(TARGET_FILE)
+                            print("\nResuming standby mode...")
 
-            time.sleep(0.05)
+                time.sleep(0.05)
 
-    except KeyboardInterrupt:
-        print("\n[!] Daemon stopped by user.")
+        except KeyboardInterrupt:
+            print("\n[!] Daemon stopped by user.")
+            break
+        except Exception:
+            # Resilient auto-recovery on transient Win32 API glitches
+            time.sleep(1.0)
 
 
 # -------------------------------------------------------------
