@@ -6,7 +6,11 @@ from datetime import datetime
 # -------------------------------------------------------------
 # Configuration & File Paths
 # -------------------------------------------------------------
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+_CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+if os.path.basename(_CURRENT_DIR) in ("src", "core", ".system", "internal"):
+    BASE_DIR = os.path.dirname(_CURRENT_DIR)
+else:
+    BASE_DIR = _CURRENT_DIR
 PRODUCTS_FILE = os.path.join(BASE_DIR, "products.json")
 TRANSACTIONS_FILE = os.path.join(BASE_DIR, "transactions.json")
 SETTINGS_FILE = os.path.join(BASE_DIR, "settings.json")

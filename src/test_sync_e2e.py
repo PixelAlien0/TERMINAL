@@ -1,7 +1,16 @@
 import json
 import os
+import sys
 import urllib.request
 import urllib.error
+
+_CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+if _CURRENT_DIR not in sys.path:
+    sys.path.insert(0, _CURRENT_DIR)
+_PROJECT_ROOT = os.path.dirname(_CURRENT_DIR) if os.path.basename(_CURRENT_DIR) in ("src", "core", ".system") else _CURRENT_DIR
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
+
 import pos_core
 
 BASE_URL = "http://127.0.0.1:8000"

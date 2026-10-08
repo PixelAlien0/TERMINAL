@@ -7,10 +7,18 @@ import urllib.parse
 from datetime import datetime
 from http import HTTPStatus
 
+_CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+if _CURRENT_DIR not in sys.path:
+    sys.path.insert(0, _CURRENT_DIR)
+
+_PROJECT_ROOT = os.path.dirname(_CURRENT_DIR) if os.path.basename(_CURRENT_DIR) in ("src", "core", ".system", "internal") else _CURRENT_DIR
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
+
 import pos_core
 
 PORT = 8000
-STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+STATIC_DIR = os.path.join(_PROJECT_ROOT, "static")
 
 
 class POSRequestHandler(http.server.SimpleHTTPRequestHandler):

@@ -94,7 +94,11 @@ echo ======================================================================
 echo.
 
 :: Run POS Server
-"%PY_CMD%" server.py 8000
+if exist "src\server.py" (
+    "%PY_CMD%" src\server.py 8000
+) else (
+    "%PY_CMD%" server.py 8000
+)
 
 if %ERRORLEVEL% neq 0 (
     echo.
