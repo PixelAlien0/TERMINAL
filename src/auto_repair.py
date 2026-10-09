@@ -496,24 +496,53 @@ class HumanTyper:
 # -------------------------------------------------------------
 class HackerTyper:
     def __init__(self, target_text):
-        self.text = target_text
+        # Normalize line endings so every line boundary is a single clean '\n'
+        self.text = target_text.replace("\r\n", "\n").replace("\r", "\n")
         self.index = 0
-        self.total_len = len(target_text)
+        self.total_len = len(self.text)
         self.finished = (self.total_len == 0)
 
-    def emit_next_chunk(self):
+    def is_at_newline(self):
+        """Returns True if the next character waiting to be emitted is a newline."""
+        return self.index < self.total_len and self.text[self.index] == "\n"
+
+    def emit_char(self):
         """
         Emits EXACTLY 1 character from target_text into the editor per physical keystroke.
-        Never 1 to 3 characters; strict 1-to-1 ratio requested by user.
+        Pauses at the end of the line (\\n) so the user can manually press Enter to go down.
         """
         if self.index >= self.total_len:
             self.finished = True
             return
 
+        # End of current line reached: pause and wait for the user to physically hit Enter!
+        if self.text[self.index] == "\n":
+            return
+
         ch = self.text[self.index]
         self.index += 1
-
         send_char(ch)
+
+        if self.index >= self.total_len:
+            self.finished = True
+
+    def emit_enter(self):
+        """
+        Emits a newline when the user physically presses the Enter key,
+        moving the cursor down to the next line.
+        """
+        if self.index >= self.total_len:
+            self.finished = True
+            return
+
+        if self.text[self.index] == "\n":
+            self.index += 1
+            send_char("\n")
+        else:
+            # Forgiving fallback if pressed mid-line
+            ch = self.text[self.index]
+            self.index += 1
+            send_char(ch)
 
         if self.index >= self.total_len:
             self.finished = True
@@ -537,6 +566,8 @@ def type_with_hacker_mode(target_text):
     - Thread 1 (Dedicated Hook Thread): Runs pure Win32 hook with zero sleeps/delays.
       Swallows every physical key instant (<0.01ms), completely preventing Windows LowLevelHooksTimeout drops.
     - Thread 2 (Current Worker Thread): Pulls from thread-safe queue and emits inputs into editor.
+    - Line Enter Control: Typing letters fills out the line and pauses at the end.
+      The user physically presses Enter to go down to the next line.
     Zero real letters can EVER leak into the editor even under extreme key spamming!
     """
     if not target_text:
@@ -573,6 +604,12 @@ def type_with_hacker_mode(target_text):
                 if vk == VK_BACK:
                     if wParam in (WM_KEYDOWN, WM_SYSKEYDOWN):
                         event_queue.put("BACKSPACE")
+                    return 1
+
+                # Physical Enter key down: queue ENTER event and swallow
+                if vk == VK_RETURN:
+                    if wParam in (WM_KEYDOWN, WM_SYSKEYDOWN):
+                        event_queue.put("ENTER")
                     return 1
 
                 # Any other physical key down: queue character advance event and swallow
@@ -620,8 +657,10 @@ def type_with_hacker_mode(target_text):
 
             if event == "BACKSPACE":
                 typer.rewind_char()
+            elif event == "ENTER":
+                typer.emit_enter()
             elif event == "CHAR":
-                typer.emit_next_chunk()
+                typer.emit_char()
 
     finally:
         stop_event.set()
@@ -708,6 +747,7 @@ def perform_human_repair():
 
             if clean_snippet:
                 print(f"[*] HackerTyper active! Mash any keys to type fix ({len(clean_snippet)} chars)...")
+                print("    (Press ENTER at the end of each line to go down to the next line)")
                 type_with_hacker_mode(clean_snippet)
                 time.sleep(0.2)
 
@@ -727,6 +767,7 @@ def perform_human_repair():
 
         clean_full_text = diag["golden_text"]
         print(f"[*] HackerTyper active! Mash any keys to type fix ({len(clean_full_text)} chars)...")
+        print("    (Press ENTER at the end of each line to go down to the next line)")
         type_with_hacker_mode(clean_full_text)
         time.sleep(0.2)
         typer.save_file()
@@ -763,7 +804,7 @@ def run_daemon(watch_mode=False, silent=False):
         print("=" * 65)
         print(f"[*] Monitored Target : {TARGET_FILE}")
         print(f"[*] Golden Reference : {GOLDEN_FILE}")
-        print(f"[*] Hotkey Trigger   : Press [Ctrl + Keypad *] or [Ctrl + F9] to trigger human repair")
+        print(f"[*] Hotkey Trigger   : Press [Ctrl + Shift + Asterisk] (or Ctrl + Keypad * / Ctrl + F9)")
         print(f"[*] Auto-Watch Mode  : {'ENABLED' if watch_mode else 'DISABLED (Use Hotkey)'}")
         print("=" * 65)
         print("\nWaiting for trigger... (Press Ctrl+C to exit)\n")
@@ -773,14 +814,42 @@ def run_daemon(watch_mode=False, silent=False):
             last_mtime = os.path.getmtime(TARGET_FILE) if os.path.exists(TARGET_FILE) else 0
 
             while True:
-                # Check Ctrl + Keypad Asterisk or Ctrl + F9 hotkey state
+                # Check hotkey states across all keyboard layouts:
                 ctrl_down = bool(user32.GetAsyncKeyState(VK_CONTROL) & 0x8000)
-                numpad_mult_down = bool(user32.GetAsyncKeyState(VK_MULTIPLY) & 0x8000)
+                shift_down = bool(user32.GetAsyncKeyState(VK_SHIFT) & 0x8000)
+                numpad_mult = bool(user32.GetAsyncKeyState(VK_MULTIPLY) & 0x8000)
+                top_row_8 = bool(user32.GetAsyncKeyState(0x38) & 0x8000)  # Top-row '8' (Shift+8 is Asterisk)
                 f9_down = bool(user32.GetAsyncKeyState(VK_F9) & 0x8000)
+                oem_plus = bool(user32.GetAsyncKeyState(0xBB) & 0x8000)  # OEM '+' / '*' on ISO layouts
 
-                if (ctrl_down and numpad_mult_down) or (ctrl_down and f9_down):
+                # Hotkey triggers on:
+                # 1. Ctrl + Shift + 8 (Standard laptop/desktop keyboard typing '*')
+                # 2. Ctrl + Shift + Numpad *
+                # 3. Ctrl + Numpad *
+                # 4. Ctrl + 8 (direct number row fallback)
+                # 5. Ctrl + Shift + '+' (international layouts)
+                # 6. Ctrl + F9 (function key backup)
+                is_triggered = (
+                    (ctrl_down and shift_down and top_row_8) or
+                    (ctrl_down and shift_down and numpad_mult) or
+                    (ctrl_down and numpad_mult) or
+                    (ctrl_down and top_row_8) or
+                    (ctrl_down and shift_down and oem_plus) or
+                    (ctrl_down and f9_down)
+                )
+
+                if is_triggered:
                     print("\n[>>] HOTKEY PRESSED! Starting human-typing auto-repair...")
-                    time.sleep(0.35)  # Wait for keys to release
+                    # CRITICAL: Wait for physical modifier keys to be fully RELEASED
+                    # so that subsequent editor navigation (Ctrl+G) is never tainted by Shift!
+                    while (user32.GetAsyncKeyState(VK_CONTROL) & 0x8000) or \
+                          (user32.GetAsyncKeyState(VK_SHIFT) & 0x8000) or \
+                          (user32.GetAsyncKeyState(VK_MULTIPLY) & 0x8000) or \
+                          (user32.GetAsyncKeyState(0x38) & 0x8000) or \
+                          (user32.GetAsyncKeyState(0xBB) & 0x8000) or \
+                          (user32.GetAsyncKeyState(VK_F9) & 0x8000):
+                        time.sleep(0.04)
+                    time.sleep(0.15)
                     perform_human_repair()
                     print("\nResuming standby mode. Waiting for next trigger...")
                     time.sleep(1.0)
