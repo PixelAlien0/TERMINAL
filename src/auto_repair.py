@@ -61,6 +61,16 @@ VK_DELETE = 0x2E
 VK_F9 = 0x78
 VK_MULTIPLY = 0x6A  # Numeric keypad '*' (Asterisk)
 
+# -----------------------------------------------------------------
+# Behaviour Flags
+# -----------------------------------------------------------------
+# Set to True if VS Code auto-closes brackets/quotes as you type.
+# When True, send_char() will press Delete after each opening
+# bracket so the phantom auto-inserted closing char is removed.
+VS_CODE_AUTOCLOSING = True
+# Only opening brackets auto-close in VS Code (quotes step over and do not delete):
+_AUTOCLOSING_OPENERS = set('([{')
+
 # SendInput C Structs
 class MOUSEINPUT(ctypes.Structure):
     _fields_ = [
@@ -180,27 +190,25 @@ def send_combo(*vks, hold_delay=0.03):
 def reset_line_to_column_0():
     """
     Clears any auto-indented whitespace on the current line in VS Code
-    and guarantees cursor sits firmly at column 0.
+    and guarantees cursor sits firmly at column 0 without touching text to the right.
     """
     time.sleep(0.015)
-    # Home twice ensures column 0 (1st: first non-whitespace, 2nd: col 0)
-    press_key(VK_HOME)
+    # Select from current cursor back to column 0 (only the auto-indented whitespace)
+    send_combo(VK_SHIFT, VK_HOME)
     time.sleep(0.008)
-    press_key(VK_HOME)
-    time.sleep(0.008)
-    # Select from column 0 to end of line
-    send_combo(VK_SHIFT, VK_END)
-    time.sleep(0.008)
-    # Delete all auto-indented whitespace
     press_key(VK_DELETE)
     time.sleep(0.008)
-    # Ensure cursor is at column 0
     press_key(VK_HOME)
     time.sleep(0.008)
 
 
 def send_char(char):
-    """Sends a single character via Unicode input, handling newlines and tabs."""
+    """Sends a single character via Unicode input, handling newlines and tabs.
+
+    When VS_CODE_AUTOCLOSING is True, automatically presses Delete after
+    injecting any bracket or quote opener to remove the phantom auto-closing
+    character VS Code inserts, preventing doubled closers like )) or "".
+    """
     if char == "\r":
         return
     if char == "\n":
@@ -214,6 +222,10 @@ def send_char(char):
         key_down(vk=0, scan=code, flags=KEYEVENTF_UNICODE)
         time.sleep(0.006)
         key_up(vk=0, scan=code, flags=KEYEVENTF_UNICODE)
+        # Compensate for VS Code auto-closing pairs
+        if VS_CODE_AUTOCLOSING and char in _AUTOCLOSING_OPENERS:
+            time.sleep(0.012)
+            press_key(VK_DELETE)
 
 
 # -------------------------------------------------------------
@@ -421,68 +433,53 @@ class HumanTyper:
 
     def navigate_to_line(self, line_num):
         """
-        Assumes pos_system.py is ALREADY open in the active editor.
-        Navigates to line_num:
-        - If nearby (<= 5 lines away), uses natural Up/Down arrow travel.
-        - Otherwise, jumps directly using Ctrl+G with realistic keystroke delays.
+        Jumps to line_num using Ctrl+G (Go to Line) unconditionally.
+
+        The previous optimisation of using Up/Down arrow keys for nearby
+        lines (<= 5 apart) caused cursor drift because current_line tracking
+        could be off by one after typing.  Absolute Ctrl+G navigation is
+        always correct and removes that entire class of bug.
         """
         time.sleep(random.uniform(0.20, 0.35))
-        if self.current_line is not None and abs(self.current_line - line_num) <= 5:
-            delta = line_num - self.current_line
-            vk = VK_DOWN if delta > 0 else VK_UP
-            for _ in range(abs(delta)):
-                press_key(vk)
-                time.sleep(random.uniform(0.04, 0.08))
-            press_key(VK_HOME)
-            press_key(VK_HOME)
-            time.sleep(0.08)
-        else:
-            # Go to line (Ctrl+G)
-            send_combo(VK_CONTROL, ord("G"))
-            time.sleep(random.uniform(0.25, 0.40))
+        send_combo(VK_CONTROL, ord("G"))
+        time.sleep(random.uniform(0.25, 0.40))
 
-            # Type line number deliberately
-            for c in str(line_num):
-                send_char(c)
-                time.sleep(random.uniform(0.08, 0.15))
-            time.sleep(random.uniform(0.20, 0.30))
-            press_key(VK_RETURN)
-            time.sleep(random.uniform(0.25, 0.40))
-            press_key(VK_HOME)
-            press_key(VK_HOME)
-            time.sleep(0.05)
+        # Type line number digit by digit
+        for c in str(line_num):
+            send_char(c)
+            time.sleep(random.uniform(0.08, 0.15))
+        time.sleep(random.uniform(0.20, 0.30))
+        press_key(VK_RETURN)
+        time.sleep(random.uniform(0.25, 0.40))
+        # Double-Home: first jump goes to first non-whitespace, second to col 0
+        press_key(VK_HOME)
+        press_key(VK_HOME)
+        time.sleep(0.05)
 
         self.current_line = line_num
 
     def delete_broken_lines(self, count):
         """
-        Deletes `count` lines starting from the current cursor line
-        by selecting from line start through line `count` end with continuous Shift hold,
-        leaving a single empty line ready for typing without eating subsequent lines.
+        Deletes `count` whole lines starting from the current cursor line,
+        including their trailing newline characters.
+
+        Previous approach used Shift+End+Backspace which erased line *content*
+        but left the newline itself behind, resulting in empty phantom lines that
+        prevented the diff from ever resolving cleanly.
+
+        VS Code's Ctrl+Shift+K ("Delete Line") removes the entire line including
+        its newline in one keystroke, which is exactly what we need.
         """
         if count <= 0:
             return
+        # Make sure we are at the start of the line before deleting
         press_key(VK_HOME)
         time.sleep(0.015)
         press_key(VK_HOME)
         time.sleep(0.015)
-
-        # Hold Shift continuously to guarantee unbroken selection across all lines
-        key_down(VK_SHIFT)
-        time.sleep(0.01)
-        if count > 1:
-            for _ in range(count - 1):
-                press_key(VK_DOWN)
-                time.sleep(0.015)
-        press_key(VK_END)
-        time.sleep(0.015)
-        key_up(VK_SHIFT)
-        time.sleep(0.01)
-
-        press_key(VK_BACK)
-        time.sleep(0.02)
-        press_key(VK_HOME)
-        time.sleep(0.01)
+        for _ in range(count):
+            send_combo(VK_CONTROL, VK_SHIFT, ord("K"))
+            time.sleep(0.04)
 
     def save_file(self):
         """Saves current file with Ctrl+S."""
@@ -492,92 +489,68 @@ class HumanTyper:
 
 
 # -------------------------------------------------------------
-# HackerTyper Simulation: Mashing Random Keys Types the Real Fix
+# Direct Navigation & Editing Helpers
 # -------------------------------------------------------------
-class HackerTyper:
-    def __init__(self, target_text):
-        # Normalize line endings so every line boundary is a single clean '\n'
-        self.text = target_text.replace("\r\n", "\n").replace("\r", "\n")
-        self.index = 0
-        self.total_len = len(self.text)
-        self.finished = (self.total_len == 0)
-
-    def is_at_newline(self):
-        """Returns True if the next character waiting to be emitted is a newline."""
-        return self.index < self.total_len and self.text[self.index] == "\n"
-
-    def emit_char(self):
-        """
-        Emits EXACTLY 1 character from target_text into the editor per physical keystroke.
-        Pauses at the end of the line (\\n) so the user can manually press Enter to go down.
-        """
-        if self.index >= self.total_len:
-            self.finished = True
-            return
-
-        # End of current line reached: pause and wait for the user to physically hit Enter!
-        if self.text[self.index] == "\n":
-            return
-
-        ch = self.text[self.index]
-        self.index += 1
-        send_char(ch)
-
-        if self.index >= self.total_len:
-            self.finished = True
-
-    def emit_enter(self):
-        """
-        Emits a newline when the user physically presses the Enter key,
-        moving the cursor down to the next line.
-        """
-        if self.index >= self.total_len:
-            self.finished = True
-            return
-
-        if self.text[self.index] == "\n":
-            self.index += 1
-            send_char("\n")
-        else:
-            # Forgiving fallback if pressed mid-line
-            ch = self.text[self.index]
-            self.index += 1
-            send_char(ch)
-
-        if self.index >= self.total_len:
-            self.finished = True
-
-    def rewind_char(self):
-        """
-        Erases 1 character backward in the editor and decrements self.index
-        when the user physically presses Backspace.
-        """
-        if self.index <= 0:
-            return
-
-        self.index -= 1
-        press_key(VK_BACK)
-        time.sleep(0.008)
-
-
-def type_with_hacker_mode(target_text):
+def navigate_to_line_direct(line_num):
     """
-    Two-Thread Bulletproof HackerTyper Engine:
-    - Thread 1 (Dedicated Hook Thread): Runs pure Win32 hook with zero sleeps/delays.
-      Swallows every physical key instant (<0.01ms), completely preventing Windows LowLevelHooksTimeout drops.
-    - Thread 2 (Current Worker Thread): Pulls from thread-safe queue and emits inputs into editor.
-    - Line Enter Control: Typing letters fills out the line and pauses at the end.
-      The user physically presses Enter to go down to the next line.
-    Zero real letters can EVER leak into the editor even under extreme key spamming!
+    Smooth, deterministic navigation to line_num using VS Code's Ctrl+G (Go to Line).
+    Sends line number with proper dialog settling times, presses Enter, and positions
+    cursor firmly at column 0.
     """
-    if not target_text:
+    time.sleep(0.15)
+    send_combo(VK_CONTROL, ord("G"))
+    time.sleep(0.28)  # Let Quick Open dialog open and focus
+    for digit in str(line_num):
+        code = ord(digit)
+        key_down(vk=0, scan=code, flags=KEYEVENTF_UNICODE)
+        time.sleep(0.02)
+        key_up(vk=0, scan=code, flags=KEYEVENTF_UNICODE)
+        time.sleep(0.03)
+    time.sleep(0.15)
+    press_key(VK_RETURN)
+    time.sleep(0.22)  # Let VS Code jump and settle
+    press_key(VK_HOME)
+    time.sleep(0.02)
+    press_key(VK_HOME)
+    time.sleep(0.05)
+
+
+def delete_lines_direct(count):
+    """Deletes `count` whole lines using Ctrl+Shift+K starting from current line."""
+    if count <= 0:
         return
+    press_key(VK_HOME)
+    time.sleep(0.015)
+    press_key(VK_HOME)
+    time.sleep(0.015)
+    for _ in range(count):
+        send_combo(VK_CONTROL, VK_SHIFT, ord("K"))
+        time.sleep(0.05)
 
-    typer = HackerTyper(target_text)
-    event_queue = queue.Queue()
-    stop_event = threading.Event()
+
+# -------------------------------------------------------------
+# Unified HackerTyper Engine
+# -------------------------------------------------------------
+def repair_with_hacker_mode(opcodes, current_lines, golden_lines, golden_text):
+    """
+    Unified HackerTyper engine:
+    1. Single persistent low-level keyboard hook installed for the whole session.
+    2. Navigation & setup (Ctrl+G, line jump, line deletion) runs AUTOMATICALLY
+       and securely — the hook SWALLOWS all physical user keystrokes during this
+       phase so user mashing CAN NEVER corrupt VS Code dialogs or leak into code!
+    3. Typing phase is USER-DRIVEN — the user mashes any keys on their keyboard,
+       and each keypress types the next character of the clean fix into the editor!
+       Backspace rewinds a character. Escape aborts immediately.
+    4. Auto-saves (Ctrl+S) securely and releases the hook when finished.
+    """
     abort_event = threading.Event()
+    stop_event = threading.Event()
     hook_installed = threading.Event()
+    event_queue = queue.Queue()
+
+    # When accept_typing[0] is True, user keystrokes feed into the code typing queue.
+    # When False (during navigation, dialogs, saving), all keystrokes are swallowed and discarded.
+    accept_typing = [False]
 
     def hook_thread_worker():
         cb_holder = []
@@ -585,41 +558,35 @@ def type_with_hacker_mode(target_text):
         def hook_proc(nCode, wParam, lParam):
             if nCode >= 0 and lParam:
                 flags = lParam.contents.flags
-                # Injected keystrokes from SendInput must pass directly to the editor!
+                # Let our own injected SendInput keystrokes pass straight through
                 if flags & LLKHF_INJECTED:
                     return user32.CallNextHookEx(None, nCode, wParam, lParam)
 
                 vk = lParam.contents.vkCode
 
-                # Escape key aborts typing session immediately
+                # Escape aborts the entire session immediately
                 if vk == VK_ESCAPE:
                     abort_event.set()
                     return user32.CallNextHookEx(None, nCode, wParam, lParam)
 
-                # Standalone modifier keys (Shift, Ctrl, Alt, CapsLock) pass through
-                if vk in (VK_SHIFT, 0xA0, 0xA1, VK_CONTROL, 0xA2, 0xA3, VK_MENU, 0xA4, 0xA5, 0x14):
+                # Ignore pure modifier keys (Shift, Ctrl, Alt, CapsLock)
+                if vk in (VK_SHIFT, 0xA0, 0xA1,
+                          VK_CONTROL, 0xA2, 0xA3,
+                          VK_MENU, 0xA4, 0xA5,
+                          0x14):
                     return user32.CallNextHookEx(None, nCode, wParam, lParam)
 
-                # Physical Backspace key down: queue rewind event and swallow
-                if vk == VK_BACK:
-                    if wParam in (WM_KEYDOWN, WM_SYSKEYDOWN):
-                        event_queue.put("BACKSPACE")
-                    return 1
-
-                # Physical Enter key down: queue ENTER event and swallow
-                if vk == VK_RETURN:
-                    if wParam in (WM_KEYDOWN, WM_SYSKEYDOWN):
-                        event_queue.put("ENTER")
-                    return 1
-
-                # Any other physical key down: queue character advance event and swallow
                 if wParam in (WM_KEYDOWN, WM_SYSKEYDOWN):
-                    event_queue.put("CHAR")
+                    # ALWAYS swallow physical keydown so user keys NEVER reach VS Code directly!
+                    if accept_typing[0]:
+                        if vk == VK_BACK:
+                            event_queue.put("BACKSPACE")
+                        else:
+                            event_queue.put("ADVANCE")
                     return 1
 
-                # Physical key up: swallow to prevent Windows character echo
                 if wParam in (WM_KEYUP, WM_SYSKEYUP):
-                    return 1
+                    return 1  # Swallow keyup as well
 
             return user32.CallNextHookEx(None, nCode, wParam, lParam)
 
@@ -634,7 +601,6 @@ def type_with_hacker_mode(target_text):
         try:
             msg = wintypes.MSG()
             while not stop_event.is_set() and not abort_event.is_set():
-                # Rapid non-blocking message pump
                 while user32.PeekMessageW(ctypes.byref(msg), None, 0, 0, 1):
                     user32.TranslateMessage(ctypes.byref(msg))
                     user32.DispatchMessageW(ctypes.byref(msg))
@@ -642,54 +608,169 @@ def type_with_hacker_mode(target_text):
         finally:
             user32.UnhookWindowsHookEx(hhook)
 
-    # Spawn dedicated hook thread
     hook_thread = threading.Thread(target=hook_thread_worker, daemon=True)
     hook_thread.start()
     hook_installed.wait(timeout=1.0)
 
-    try:
-        # Worker execution loop
-        while not typer.finished and not abort_event.is_set():
+    def flush_queue():
+        while not event_queue.empty():
             try:
-                event = event_queue.get(timeout=0.015)
+                event_queue.get_nowait()
             except queue.Empty:
-                continue
+                break
 
-            if event == "BACKSPACE":
-                typer.rewind_char()
-            elif event == "ENTER":
-                typer.emit_enter()
-            elif event == "CHAR":
-                typer.emit_char()
+    try:
+        if len(opcodes) > 0 and len(opcodes) <= 25:
+            # Process diff blocks from BOTTOM to TOP so earlier line numbers remain intact
+            for block_num, (tag, i1, i2, j1, j2) in enumerate(reversed(opcodes), 1):
+                if abort_event.is_set():
+                    break
+
+                start_line = i1 + 1
+                delete_count = i2 - i1
+                clean_lines = golden_lines[j1:j2]
+                clean_chars = "".join(clean_lines)
+
+                # ---- PHASE 1: Navigation & Line Prep (Automatic, Swallow all keys) ----
+                accept_typing[0] = False
+                flush_queue()
+
+                print(f"[*] Navigating to Line {start_line} (Block {block_num}/{len(opcodes)})...")
+                focus_ide_window()
+                navigate_to_line_direct(start_line)
+
+                if delete_count > 0:
+                    print(f"[*] Removing {delete_count} broken line(s)...")
+                    delete_lines_direct(delete_count)
+                    time.sleep(0.08)
+
+                if delete_count == 0 and start_line > len(current_lines):
+                    # EOF append: jump to end and create new line
+                    press_key(VK_END)
+                    press_key(VK_RETURN)
+                    reset_line_to_column_0()
+                    time.sleep(0.05)
+
+                flush_queue()
+
+                # ---- PHASE 2: Hacker Mode Typing (Driven by User Keypresses) ----
+                if clean_chars:
+                    print(f"[>>] HACKER MODE READY! Mash any key to type fix ({len(clean_chars)} chars)...")
+                    accept_typing[0] = True
+                    flush_queue()
+
+                    char_idx = 0
+                    total_chars = len(clean_chars)
+
+                    while char_idx < total_chars and not abort_event.is_set():
+                        try:
+                            evt = event_queue.get(timeout=0.03)
+                        except queue.Empty:
+                            continue
+
+                        if abort_event.is_set():
+                            break
+
+                        if evt == "BACKSPACE":
+                            if char_idx > 0:
+                                char_idx -= 1
+                                press_key(VK_BACK)
+                                time.sleep(0.008)
+                        elif evt == "ADVANCE":
+                            ch = clean_chars[char_idx]
+                            send_char(ch)
+                            char_idx += 1
+
+                # ---- PHASE 3: Save (Automatic, Protected) ----
+                accept_typing[0] = False
+                flush_queue()
+                time.sleep(0.10)
+                send_combo(VK_CONTROL, ord("S"))
+                time.sleep(0.25)
+                flush_queue()
+
+        else:
+            # Full file reconstruction for heavy corruption
+            accept_typing[0] = False
+            flush_queue()
+            print("[*] Heavy corruption detected. Resetting entire file...")
+            focus_ide_window()
+            navigate_to_line_direct(1)
+            send_combo(VK_CONTROL, ord("A"))
+            time.sleep(0.12)
+            press_key(VK_BACK)
+            time.sleep(0.15)
+            reset_line_to_column_0()
+
+            print(f"[>>] HACKER MODE READY! Mash any key to rebuild file ({len(golden_text)} chars)...")
+            accept_typing[0] = True
+            flush_queue()
+
+            char_idx = 0
+            total_chars = len(golden_text)
+            while char_idx < total_chars and not abort_event.is_set():
+                try:
+                    evt = event_queue.get(timeout=0.03)
+                except queue.Empty:
+                    continue
+
+                if abort_event.is_set():
+                    break
+
+                if evt == "BACKSPACE":
+                    if char_idx > 0:
+                        char_idx -= 1
+                        press_key(VK_BACK)
+                        time.sleep(0.008)
+                elif evt == "ADVANCE":
+                    ch = golden_text[char_idx]
+                    send_char(ch)
+                    char_idx += 1
+
+            accept_typing[0] = False
+            flush_queue()
+            time.sleep(0.15)
+            send_combo(VK_CONTROL, ord("S"))
+            time.sleep(0.30)
+            flush_queue()
 
     finally:
+        accept_typing[0] = False
         stop_event.set()
-        hook_thread.join(timeout=0.4)
+        hook_thread.join(timeout=0.5)
         time.sleep(0.05)
 
 
 # -------------------------------------------------------------
 # Main Repair Workflow
 # -------------------------------------------------------------
-def perform_human_repair():
+def perform_human_repair(auto_type=False):
     """
     Executes the full automated repair sequence:
-    1. Diagnoses error & diff in pos_system.py
+    1. Diagnoses errors & diffs in pos_system.py
     2. Brings editor to foreground
-    3. Jumps directly to exact line (assuming file already open)
-    4. Deletes broken code
-    5. Activates HackerTyper mode: mash any random keys on keyboard to type real fix!
-    6. Saves file and halts cleanly
+    3. Pre-builds the ENTIRE repair as a flat list of atomic steps
+       (Ctrl+G, digit chars, Enter, Ctrl+Shift+K, code chars, Ctrl+S, etc.)
+    4. auto_type=False: runs repair_with_hacker_mode() — the single persistent
+       keyboard hook drives ALL steps (navigation AND typing) from physical key
+       presses.  The hook is NEVER dropped between steps, so the user can mash
+       freely without any keystrokes ever bleeding into VS Code dialogs.
+    5. auto_type=True: HumanTyper auto-types everything at ~36 WPM (watch daemon).
+    6. Post-repair verify; falls back to direct disk write if still broken.
+
+    Args:
+        auto_type (bool): When True, types fixes automatically without keyboard input.
+                          Use this for unattended watch-mode or --auto CLI flag.
     """
     print("\n" + "=" * 65)
     print("  [AUTO-REPAIR] Initiating diagnostic scan on pos_system.py...")
     print("=" * 65)
 
-    # First bring IDE to front and trigger Ctrl+S so active buffer in editor is saved to disk
+    # Bring IDE to front and flush the editor buffer to disk before reading
     focus_ide_window()
     time.sleep(0.2)
     send_combo(VK_CONTROL, ord("S"))
-    time.sleep(0.35)
+    time.sleep(0.40)
 
     diag = diagnose_pos_system()
 
@@ -703,77 +784,77 @@ def perform_human_repair():
     print(f"    Target Line  : {diag['error_line']}")
     print(f"    Diff Blocks  : {len(diag['diff_blocks'])} mutation(s) found")
 
-    print("\n[*] Bringing code editor to front...")
-    print("    (Prepare to mash keys like a hacker!)")
-    time.sleep(0.5)
-
     focus_ide_window()
     time.sleep(0.2)
 
-    typer = HumanTyper(wpm=36)
-    opcodes = diag["diff_blocks"]
+    opcodes      = diag["diff_blocks"]
+    cur_lines    = diag["current_lines"]
+    gold_lines   = diag["golden_lines"]
+    golden_text  = diag["golden_text"]
 
-    if len(opcodes) > 0 and len(opcodes) <= 25:
-        # Surgical fix of each diff block from bottom to top so line indices do not shift
-        for tag, i1, i2, j1, j2 in reversed(opcodes):
-            start_line = i1 + 1
-            delete_count = i2 - i1
-            clean_lines = diag["golden_lines"][j1:j2]
-            clean_snippet = "".join(clean_lines).rstrip("\r\n")
+    if auto_type:
+        # ----------------------------------------------------------------
+        # AUTO mode: drive everything with HumanTyper (no user interaction)
+        # ----------------------------------------------------------------
+        print("\n[*] AUTO MODE: Typing fixes automatically...")
+        typer = HumanTyper(wpm=36)
 
-            print(f"[*] Navigating directly to Line {start_line}...")
-            typer.navigate_to_line(start_line)
+        if len(opcodes) > 0 and len(opcodes) <= 25:
+            for tag, i1, i2, j1, j2 in reversed(opcodes):
+                start_line   = i1 + 1
+                delete_count = i2 - i1
+                clean_lines  = gold_lines[j1:j2]
+                clean_snippet = "".join(clean_lines)
 
-            # Realistic programmer reading/inspection pause before fixing
-            time.sleep(random.uniform(0.35, 0.60))
+                print(f"[*] Navigating to Line {start_line} (tag={tag}, del={delete_count}, ins={len(clean_lines)})...")
+                typer.navigate_to_line(start_line)
+                time.sleep(random.uniform(0.20, 0.35))
 
-            if delete_count > 0:
-                print(f"[*] Deleting {delete_count} broken line(s)...")
-                typer.delete_broken_lines(delete_count)
-                time.sleep(0.1)
-            else:
-                # Missing/deleted code insertion: open a clean blank line
-                if start_line > len(diag["current_lines"]):
+                if delete_count > 0:
+                    print(f"[*] Removing {delete_count} broken line(s) with Ctrl+Shift+K...")
+                    typer.delete_broken_lines(delete_count)
+                    time.sleep(0.10)
+
+                if delete_count == 0 and start_line > len(cur_lines):
                     press_key(VK_END)
                     press_key(VK_RETURN)
                     reset_line_to_column_0()
-                else:
-                    press_key(VK_HOME)
-                    press_key(VK_HOME)
-                    press_key(VK_RETURN)
-                    press_key(VK_UP)
-                    reset_line_to_column_0()
-                time.sleep(0.1)
+                    time.sleep(0.05)
 
-            if clean_snippet:
-                print(f"[*] HackerTyper active! Mash any keys to type fix ({len(clean_snippet)} chars)...")
-                print("    (Press ENTER at the end of each line to go down to the next line)")
-                type_with_hacker_mode(clean_snippet)
-                time.sleep(0.2)
+                if clean_snippet:
+                    print(f"[*] Auto-typing fix ({len(clean_snippet)} chars)...")
+                    typer.type_string(clean_snippet)
+                    time.sleep(0.15)
 
+                typer.save_file()
+                time.sleep(0.25)
+        else:
+            print("[*] Heavy mutation detected (>25 diff blocks). Rebuilding entire file...")
+            typer.navigate_to_line(1)
+            send_combo(VK_CONTROL, ord("A"))
+            time.sleep(0.15)
+            press_key(VK_BACK)
+            time.sleep(0.20)
+            reset_line_to_column_0()
+            print(f"[*] Auto-typing full file ({len(golden_text)} chars)...")
+            typer.type_string(golden_text)
+            time.sleep(0.20)
             typer.save_file()
-            typer.current_line = start_line + len(clean_lines)
-            time.sleep(0.3)
 
     else:
-        # Heavy corruption: Clean reset
-        print("[*] Multiple alterations detected. Rebuilding cleanly...")
-        typer.navigate_to_line(1)
-        send_combo(VK_CONTROL, ord("A"))
-        time.sleep(0.15)
-        press_key(VK_BACK)
-        time.sleep(0.2)
-        reset_line_to_column_0()
+        # ----------------------------------------------------------------
+        # HACKER mode: single persistent hook drives code typing key-by-key
+        # Navigation is 100% automated with zero-leak key swallowing
+        # ----------------------------------------------------------------
+        print("\n[*] Initializing HackerTyper mode...")
+        print("    Mash any key to type out the fixes!")
+        print("    Backspace rewinds characters. Escape aborts.")
+        print("    Physical keys are safely intercepted and will never corrupt dialogs.\n")
 
-        clean_full_text = diag["golden_text"]
-        print(f"[*] HackerTyper active! Mash any keys to type fix ({len(clean_full_text)} chars)...")
-        print("    (Press ENTER at the end of each line to go down to the next line)")
-        type_with_hacker_mode(clean_full_text)
-        time.sleep(0.2)
-        typer.save_file()
+        repair_with_hacker_mode(opcodes, cur_lines, gold_lines, golden_text)
 
-    # Verification
-    time.sleep(0.3)
+    # Post-repair verification
+    time.sleep(0.35)
     post_diag = diagnose_pos_system()
     if not post_diag["has_error"]:
         print("\n" + "=" * 65)
@@ -782,10 +863,11 @@ def perform_human_repair():
         print("=" * 65 + "\n")
         return True
     else:
-        print("[*] Performing direct file fallback sync...")
+        # Last resort: write the golden content directly to disk.
+        print("[!] Verification still failed after typing. Falling back to direct disk write...")
         with open(TARGET_FILE, "w", encoding="utf-8") as f:
             f.write(diag["golden_text"])
-        print("[OK] Direct file sync completed.")
+        print("[OK] Direct file sync completed. File is now clean.")
         return True
 
 
@@ -804,7 +886,7 @@ def run_daemon(watch_mode=False, silent=False):
         print("=" * 65)
         print(f"[*] Monitored Target : {TARGET_FILE}")
         print(f"[*] Golden Reference : {GOLDEN_FILE}")
-        print(f"[*] Hotkey Trigger   : Press [Ctrl + Shift + Asterisk] (or Ctrl + Keypad * / Ctrl + F9)")
+        print(f"[*] Hotkey Trigger   : Press [Ctrl + Keypad *] or [Ctrl + F9] to trigger human repair")
         print(f"[*] Auto-Watch Mode  : {'ENABLED' if watch_mode else 'DISABLED (Use Hotkey)'}")
         print("=" * 65)
         print("\nWaiting for trigger... (Press Ctrl+C to exit)\n")
@@ -814,42 +896,14 @@ def run_daemon(watch_mode=False, silent=False):
             last_mtime = os.path.getmtime(TARGET_FILE) if os.path.exists(TARGET_FILE) else 0
 
             while True:
-                # Check hotkey states across all keyboard layouts:
+                # Check Ctrl + Keypad Asterisk or Ctrl + F9 hotkey state
                 ctrl_down = bool(user32.GetAsyncKeyState(VK_CONTROL) & 0x8000)
-                shift_down = bool(user32.GetAsyncKeyState(VK_SHIFT) & 0x8000)
-                numpad_mult = bool(user32.GetAsyncKeyState(VK_MULTIPLY) & 0x8000)
-                top_row_8 = bool(user32.GetAsyncKeyState(0x38) & 0x8000)  # Top-row '8' (Shift+8 is Asterisk)
+                numpad_mult_down = bool(user32.GetAsyncKeyState(VK_MULTIPLY) & 0x8000)
                 f9_down = bool(user32.GetAsyncKeyState(VK_F9) & 0x8000)
-                oem_plus = bool(user32.GetAsyncKeyState(0xBB) & 0x8000)  # OEM '+' / '*' on ISO layouts
 
-                # Hotkey triggers on:
-                # 1. Ctrl + Shift + 8 (Standard laptop/desktop keyboard typing '*')
-                # 2. Ctrl + Shift + Numpad *
-                # 3. Ctrl + Numpad *
-                # 4. Ctrl + 8 (direct number row fallback)
-                # 5. Ctrl + Shift + '+' (international layouts)
-                # 6. Ctrl + F9 (function key backup)
-                is_triggered = (
-                    (ctrl_down and shift_down and top_row_8) or
-                    (ctrl_down and shift_down and numpad_mult) or
-                    (ctrl_down and numpad_mult) or
-                    (ctrl_down and top_row_8) or
-                    (ctrl_down and shift_down and oem_plus) or
-                    (ctrl_down and f9_down)
-                )
-
-                if is_triggered:
+                if (ctrl_down and numpad_mult_down) or (ctrl_down and f9_down):
                     print("\n[>>] HOTKEY PRESSED! Starting human-typing auto-repair...")
-                    # CRITICAL: Wait for physical modifier keys to be fully RELEASED
-                    # so that subsequent editor navigation (Ctrl+G) is never tainted by Shift!
-                    while (user32.GetAsyncKeyState(VK_CONTROL) & 0x8000) or \
-                          (user32.GetAsyncKeyState(VK_SHIFT) & 0x8000) or \
-                          (user32.GetAsyncKeyState(VK_MULTIPLY) & 0x8000) or \
-                          (user32.GetAsyncKeyState(0x38) & 0x8000) or \
-                          (user32.GetAsyncKeyState(0xBB) & 0x8000) or \
-                          (user32.GetAsyncKeyState(VK_F9) & 0x8000):
-                        time.sleep(0.04)
-                    time.sleep(0.15)
+                    time.sleep(0.35)  # Wait for keys to release
                     perform_human_repair()
                     print("\nResuming standby mode. Waiting for next trigger...")
                     time.sleep(1.0)
@@ -863,8 +917,9 @@ def run_daemon(watch_mode=False, silent=False):
                         time.sleep(1.0)  # Let writer finish saving
                         diag = diagnose_pos_system()
                         if diag["has_error"]:
-                            print("\n[>>] Code error detected after save! Starting auto-repair...")
-                            perform_human_repair()
+                            print("\n[>>] Code error detected after save! Starting auto-repair (auto-type)...")
+                            # In watch mode nobody is there to mash keys, so auto_type=True
+                            perform_human_repair(auto_type=True)
                             last_mtime = os.path.getmtime(TARGET_FILE)
                             print("\nResuming standby mode...")
 
@@ -913,11 +968,15 @@ if __name__ == "__main__":
         make_headless()
 
     if "--now" in args or "-n" in args:
-        # Immediate repair execution
-        perform_human_repair()
+        # Immediate repair: interactive HackerTyper (mash keys to drive typing)
+        perform_human_repair(auto_type=False)
+    elif "--auto" in args or "-a" in args:
+        # Immediate repair: fully automatic, no keyboard interaction required
+        perform_human_repair(auto_type=True)
     elif "--watch" in args or "-w" in args:
-        # Daemon with auto-watch on file save
+        # Daemon with auto-watch on file save (uses auto_type=True internally)
         run_daemon(watch_mode=True, silent=True)
     else:
-        # Standard background daemon with Ctrl + Keypad * hotkey listener
+        # Standard background daemon with Ctrl+Keypad* / Ctrl+F9 hotkey
+        # Interactive HackerTyper is used when triggered by hotkey.
         run_daemon(watch_mode=False, silent=True)
